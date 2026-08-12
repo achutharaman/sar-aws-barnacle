@@ -1,0 +1,89 @@
+{
+  "_meta": {
+    "schema": "1.0",
+    "currency": "USD",
+    "captured": "2026-08-01",
+    "note": "OFFLINE FALLBACK ONLY. These are approximate published on-demand list prices, hand-seeded so the tool and its tests work without network access. They are NOT authoritative and they go stale. The default runtime source is the AWS Pricing API (see pricing/api.py); this table is used only when that API is unreachable or not permitted, and the report footer says so when it is. Regenerate with: scripts/refresh_prices.py",
+    "excludes": "Provisioned IOPS and throughput charges for io1/io2/gp3 are not represented here; storage-only prices produce a LOWER_BOUND cost estimate for those volume types."
+  },
+  "regions": {
+    "us-east-1": {
+      "ebs-gb-month": {
+        "gp3": "0.080",
+        "gp2": "0.100",
+        "io1": "0.125",
+        "io2": "0.125",
+        "st1": "0.045",
+        "sc1": "0.015",
+        "standard": "0.050"
+      },
+      "ebs-snapshot-gb-month": { "default": "0.050" },
+      "eip-idle-hour": { "default": "0.005" }
+    },
+    "us-west-2": {
+      "ebs-gb-month": {
+        "gp3": "0.080",
+        "gp2": "0.100",
+        "io1": "0.125",
+        "io2": "0.125",
+        "st1": "0.045",
+        "sc1": "0.015",
+        "standard": "0.050"
+      },
+      "ebs-snapshot-gb-month": { "default": "0.050" },
+      "eip-idle-hour": { "default": "0.005" }
+    },
+    "eu-west-1": {
+      "ebs-gb-month": {
+        "gp3": "0.088",
+        "gp2": "0.110",
+        "io1": "0.138",
+        "io2": "0.138",
+        "st1": "0.050",
+        "sc1": "0.017",
+        "standard": "0.055"
+      },
+      "ebs-snapshot-gb-month": { "default": "0.053" },
+      "eip-idle-hour": { "default": "0.005" }
+    },
+    "eu-central-1": {
+      "ebs-gb-month": {
+        "gp3": "0.092",
+        "gp2": "0.119",
+        "io1": "0.149",
+        "io2": "0.149",
+        "st1": "0.054",
+        "sc1": "0.018",
+        "standard": "0.059"
+      },
+      "ebs-snapshot-gb-month": { "default": "0.054" },
+      "eip-idle-hour": { "default": "0.005" }
+    },
+    "ap-south-1": {
+      "ebs-gb-month": {
+        "gp3": "0.0912",
+        "gp2": "0.114",
+        "io1": "0.1425",
+        "io2": "0.1425",
+        "st1": "0.0513",
+        "sc1": "0.0174",
+        "standard": "0.0950"
+      },
+      "ebs-snapshot-gb-month": { "default": "0.0500" },
+      "eip-idle-hour": { "default": "0.005" }
+    },
+    "ap-southeast-1": {
+      "ebs-gb-month": {
+        "gp3": "0.096",
+        "gp2": "0.120",
+        "io1": "0.138",
+        "io2": "0.138",
+        "st1": "0.054",
+        "sc1": "0.018",
+        "standard": "0.060"
+      },
+      "ebs-snapshot-gb-month": { "default": "0.050" },
+      "eip-idle-hour": { "default": "0.005" }
+    }
+  }
+}
