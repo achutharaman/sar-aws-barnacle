@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from aws_barnacle.models import CostConfidence, Finding, Severity
+from sar_aws_barnacle.models import CostConfidence, Finding, Severity
 
 
 def _finding(**overrides):

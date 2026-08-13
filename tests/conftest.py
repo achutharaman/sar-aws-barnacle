@@ -11,11 +11,11 @@ from datetime import UTC, datetime
 
 import pytest
 
-from aws_barnacle.config import Config
-from aws_barnacle.context import ScanContext
-from aws_barnacle.pricing.base import PriceBook
-from aws_barnacle.pricing.static import StaticPriceBook
-from aws_barnacle.session import ClientFactory
+from sar_aws_barnacle.config import Config
+from sar_aws_barnacle.context import ScanContext
+from sar_aws_barnacle.pricing.base import PriceBook
+from sar_aws_barnacle.pricing.static import StaticPriceBook
+from sar_aws_barnacle.session import ClientFactory
 
 FROZEN_NOW = datetime(2026, 8, 12, 12, 0, 0, tzinfo=UTC)
 TEST_REGION = "ap-south-1"

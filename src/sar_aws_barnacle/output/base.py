@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from typing import Protocol, TextIO, runtime_checkable
 
-from aws_barnacle.config import Config, OutputFormat
-from aws_barnacle.models import ScanResult
+from sar_aws_barnacle.config import Config, OutputFormat
+from sar_aws_barnacle.models import ScanResult
 
 
 @runtime_checkable
@@ -21,8 +21,8 @@ class Renderer(Protocol):
 
 
 def get_renderer(fmt: OutputFormat, *, price_source: str | None = None) -> Renderer:
-    from aws_barnacle.output.json_output import JsonRenderer
-    from aws_barnacle.output.table import TableRenderer
+    from sar_aws_barnacle.output.json_output import JsonRenderer
+    from sar_aws_barnacle.output.table import TableRenderer
 
     if fmt is OutputFormat.JSON:
         return JsonRenderer(price_source=price_source)

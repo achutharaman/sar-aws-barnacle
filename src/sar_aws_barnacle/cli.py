@@ -17,8 +17,8 @@ from typing import Annotated
 
 import typer
 
-from aws_barnacle import __version__
-from aws_barnacle.config import (
+from sar_aws_barnacle import __version__
+from sar_aws_barnacle.config import (
     Config,
     ExitCode,
     FailOn,
@@ -26,14 +26,14 @@ from aws_barnacle.config import (
     load_config,
     resolve_exit_code,
 )
-from aws_barnacle.iam import build_policy
-from aws_barnacle.output.base import get_renderer
-from aws_barnacle.pricing.api import PricingApiPriceBook
-from aws_barnacle.pricing.base import PriceBook
-from aws_barnacle.pricing.static import StaticPriceBook
-from aws_barnacle.registry import all_checks, select_checks
-from aws_barnacle.runner import run_scan
-from aws_barnacle.session import ClientFactory
+from sar_aws_barnacle.iam import build_policy
+from sar_aws_barnacle.output.base import get_renderer
+from sar_aws_barnacle.pricing.api import PricingApiPriceBook
+from sar_aws_barnacle.pricing.base import PriceBook
+from sar_aws_barnacle.pricing.static import StaticPriceBook
+from sar_aws_barnacle.registry import all_checks, select_checks
+from sar_aws_barnacle.runner import run_scan
+from sar_aws_barnacle.session import ClientFactory
 
 app = typer.Typer(
     name="sar-aws-barnacle",

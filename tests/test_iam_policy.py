@@ -9,8 +9,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from aws_barnacle.iam import BASELINE_ACTIONS, build_policy, collect_actions
-from aws_barnacle.registry import all_checks
+from sar_aws_barnacle.iam import BASELINE_ACTIONS, build_policy, collect_actions
+from sar_aws_barnacle.registry import all_checks
 
 POLICY_PATH = Path(__file__).resolve().parents[1] / "docs" / "iam-policy.json"
 

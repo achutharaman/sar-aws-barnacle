@@ -9,7 +9,7 @@ from functools import lru_cache
 from importlib import resources
 from typing import Any
 
-SEED_PACKAGE = "aws_barnacle.pricing.data"
+SEED_PACKAGE = "sar_aws_barnacle.pricing.data"
 SEED_FILENAME = "prices.seed.json"
 
 

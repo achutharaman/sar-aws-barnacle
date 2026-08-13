@@ -11,11 +11,11 @@ from decimal import Decimal
 import pytest
 from botocore.exceptions import ClientError
 
-from aws_barnacle.config import Config
-from aws_barnacle.models import CostConfidence, Finding, Scope, Severity
-from aws_barnacle.pricing.base import NullPriceBook
-from aws_barnacle.runner import plan_units, run_scan
-from aws_barnacle.session import ClientFactory, ReadOnlyViolationError
+from sar_aws_barnacle.config import Config
+from sar_aws_barnacle.models import CostConfidence, Finding, Scope, Severity
+from sar_aws_barnacle.pricing.base import NullPriceBook
+from sar_aws_barnacle.runner import plan_units, run_scan
+from sar_aws_barnacle.session import ClientFactory, ReadOnlyViolationError
 
 NOW = datetime(2026, 8, 12, tzinfo=UTC)
 

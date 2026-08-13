@@ -6,9 +6,9 @@ import io
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from aws_barnacle.config import Config
-from aws_barnacle.models import CheckError, CostConfidence, Finding, ScanResult, Severity
-from aws_barnacle.output.table import TableRenderer
+from sar_aws_barnacle.config import Config
+from sar_aws_barnacle.models import CheckError, CostConfidence, Finding, ScanResult, Severity
+from sar_aws_barnacle.output.table import TableRenderer
 
 
 def _finding(**overrides) -> Finding:

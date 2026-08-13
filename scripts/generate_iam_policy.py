@@ -13,7 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from aws_barnacle.iam import build_policy  # noqa: E402
+from sar_aws_barnacle.iam import build_policy  # noqa: E402
 
 OUTPUT = ROOT / "docs" / "iam-policy.json"
 

@@ -26,7 +26,7 @@ resources were pointless.
 | Surface | Name | Reason |
 |---|---|---|
 | PyPI distribution | `sar-aws-barnacle` | `barnacle` is taken on PyPI by a tensor-decomposition library and an older progress-bar package |
-| Import package | `aws_barnacle` | Top-level import names share one namespace; `barnacle` would collide in site-packages |
+| Import package | `sar_aws_barnacle` | Matches the distribution and CLI naming; see the 2026-08-13 revision below for why this moved off `aws_barnacle` |
 | CLI command | `sar-aws-barnacle` | One console script, matching the distribution name exactly |
 | GitHub repo | `sar-aws-barnacle` | Matches the distribution |
 
@@ -40,9 +40,19 @@ name is nicer to type daily. That was superseded: every project in this
 author's portfolio uses a `sar-aws-*` prefix for AWS-focused tools, so the CLI
 command, config filename (`sar-aws-barnacle.toml`), env var prefix
 (`SAR_AWS_BARNACLE_*`), and IAM policy Sid now all match the distribution name
-for consistency across the portfolio. The import package stays `aws_barnacle`
-regardless — that one is a PyPI-collision constraint, not a style choice, so it
-does not move with the rest.
+for consistency across the portfolio.
+
+The import package was originally kept at `aws_barnacle` rather than moving to
+`sar_aws_barnacle` with the rest, specifically to dodge a PyPI namespace
+collision with the unrelated, already-published `barnacle` package. That
+constraint turned out not to apply: this project itself has never been
+published (`pypi.org/project/sar-aws-barnacle` returns 404, no `v*` tag has
+ever been pushed), so nothing depends on `import aws_barnacle` yet and there
+was no live collision risk to avoid. With the constraint gone, the import
+package was renamed to `sar_aws_barnacle` for the same portfolio-wide
+consistency as everything else in this table. This reasoning stops applying
+the moment the package is actually published — renaming the import path after
+that point would break every existing installation.
 
 ---
 
@@ -97,7 +107,7 @@ cli.py          Typer adapter. Parses flags, renders. No detection logic.
 
 **Adding a check touches two files** — `checks/foo.py` and
 `tests/checks/test_foo.py`. No import list, no registry edit, no CLI change.
-Third-party distributions can ship checks via the `aws_barnacle.checks`
+Third-party distributions can ship checks via the `sar_aws_barnacle.checks`
 entry-point group.
 
 **The check contract** is five class attributes plus `run(ctx)`:
