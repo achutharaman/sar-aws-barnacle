@@ -13,7 +13,7 @@ import json
 from decimal import Decimal
 from pathlib import Path
 
-from aws_barnacle.pricing.api import (
+from sar_aws_barnacle.pricing.api import (
     CACHE_FILENAME,
     PricingApiPriceBook,
     _fetch_ebs_storage,
@@ -21,7 +21,7 @@ from aws_barnacle.pricing.api import (
     _fetch_snapshot_storage,
     _price_from_terms,
 )
-from aws_barnacle.pricing.base import EBS_GB_MONTH, EIP_IDLE_HOUR
+from sar_aws_barnacle.pricing.base import EBS_GB_MONTH, EIP_IDLE_HOUR
 
 REGION = "ap-south-1"
 

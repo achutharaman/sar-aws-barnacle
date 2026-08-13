@@ -23,8 +23,8 @@ htmlcov/
 .DS_Store
 
 # sar-aws-barnacle
-prices.cache.json
-scan-report.json
+*.json
+!src/sar_aws_barnacle/pricing/data/prices.seed.json
 
 # NEVER commit these
 .env

@@ -2,7 +2,7 @@
 
 A check is any class carrying the class-level metadata below and a ``run``
 method. Registration is a decorator, discovery is automatic, and third parties
-can ship checks from their own distributions via the ``aws_barnacle.checks``
+can ship checks from their own distributions via the ``sar_aws_barnacle.checks``
 entry-point group without this repo knowing they exist.
 """
 
@@ -13,19 +13,19 @@ import pkgutil
 from collections.abc import Iterable, Iterator
 from typing import TYPE_CHECKING, ClassVar, Protocol, runtime_checkable
 
-from aws_barnacle.models import Finding, Scope
+from sar_aws_barnacle.models import Finding, Scope
 
 if TYPE_CHECKING:
-    from aws_barnacle.context import ScanContext
+    from sar_aws_barnacle.context import ScanContext
 
-CHECK_ENTRY_POINT_GROUP = "aws_barnacle.checks"
+CHECK_ENTRY_POINT_GROUP = "sar_aws_barnacle.checks"
 
 
 @runtime_checkable
 class Check(Protocol):
     """The contract every check implements.
 
-    ``run`` takes only a :class:`~aws_barnacle.context.ScanContext`. Checks never
+    ``run`` takes only a :class:`~sar_aws_barnacle.context.ScanContext`. Checks never
     build boto3 clients, never read config files, and never know a renderer
     exists -- which is exactly why they are trivial to test.
     """
@@ -101,7 +101,7 @@ def register(cls: type[Check]) -> type[Check]:
 
 
 def discover(*, include_plugins: bool = True, force: bool = False) -> None:
-    """Import every module under ``aws_barnacle.checks``, then load plugins.
+    """Import every module under ``sar_aws_barnacle.checks``, then load plugins.
 
     Idempotent. Dropping a new file into ``checks/`` is enough to register it --
     no import list to update, which is the whole point.
@@ -110,7 +110,7 @@ def discover(*, include_plugins: bool = True, force: bool = False) -> None:
     if _discovered and not force:
         return
 
-    from aws_barnacle import checks as checks_pkg
+    from sar_aws_barnacle import checks as checks_pkg
 
     for mod in pkgutil.iter_modules(checks_pkg.__path__):
         if mod.name.startswith("_"):

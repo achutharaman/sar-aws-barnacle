@@ -9,10 +9,10 @@ from __future__ import annotations
 from collections.abc import Iterator
 from decimal import ROUND_HALF_UP, Decimal
 
-from aws_barnacle.context import ScanContext
-from aws_barnacle.models import CostConfidence, Finding, Scope, Severity
-from aws_barnacle.pricing.base import EBS_GB_MONTH
-from aws_barnacle.registry import register
+from sar_aws_barnacle.context import ScanContext
+from sar_aws_barnacle.models import CostConfidence, Finding, Scope, Severity
+from sar_aws_barnacle.pricing.base import EBS_GB_MONTH
+from sar_aws_barnacle.registry import register
 
 # io1/io2 bill for provisioned IOPS on top of storage, and gp3 bills separately
 # for IOPS/throughput above the free baseline. We only price storage, so for

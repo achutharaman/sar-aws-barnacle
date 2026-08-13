@@ -21,12 +21,12 @@ from datetime import UTC, datetime
 
 from botocore.exceptions import BotoCoreError, ClientError
 
-from aws_barnacle.config import Config
-from aws_barnacle.context import ScanContext
-from aws_barnacle.models import GLOBAL_REGION, CheckError, Finding, ScanResult, Scope
-from aws_barnacle.pricing.base import PriceBook
-from aws_barnacle.registry import Check
-from aws_barnacle.session import ClientFactory, ReadOnlyViolationError
+from sar_aws_barnacle.config import Config
+from sar_aws_barnacle.context import ScanContext
+from sar_aws_barnacle.models import GLOBAL_REGION, CheckError, Finding, ScanResult, Scope
+from sar_aws_barnacle.pricing.base import PriceBook
+from sar_aws_barnacle.registry import Check
+from sar_aws_barnacle.session import ClientFactory, ReadOnlyViolationError
 
 log = logging.getLogger(__name__)
 

@@ -23,8 +23,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from aws_barnacle.pricing.base import EBS_GB_MONTH, EBS_SNAPSHOT_GB_MONTH, EIP_IDLE_HOUR
-from aws_barnacle.pricing.static import StaticPriceBook
+from sar_aws_barnacle.pricing.base import EBS_GB_MONTH, EBS_SNAPSHOT_GB_MONTH, EIP_IDLE_HOUR
+from sar_aws_barnacle.pricing.static import StaticPriceBook
 
 log = logging.getLogger(__name__)
 

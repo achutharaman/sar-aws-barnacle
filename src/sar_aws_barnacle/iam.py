@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
-from aws_barnacle.registry import Check, all_checks
+from sar_aws_barnacle.registry import Check, all_checks
 
 POLICY_VERSION = "2012-10-17"
 SID = "SarAwsBarnacleReadOnlyScan"
