@@ -7,9 +7,9 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
-from aws_barnacle.pricing.api import CACHE_FILENAME, PricingApiPriceBook
-from aws_barnacle.pricing.base import EBS_GB_MONTH, EIP_IDLE_HOUR, NullPriceBook
-from aws_barnacle.pricing.static import StaticPriceBook
+from sar_aws_barnacle.pricing.api import CACHE_FILENAME, PricingApiPriceBook
+from sar_aws_barnacle.pricing.base import EBS_GB_MONTH, EIP_IDLE_HOUR, NullPriceBook
+from sar_aws_barnacle.pricing.static import StaticPriceBook
 
 
 def test_seed_lookup():

@@ -5,7 +5,7 @@ from __future__ import annotations
 from decimal import Decimal
 from pathlib import Path
 
-from aws_barnacle.config import (
+from sar_aws_barnacle.config import (
     Config,
     ExitCode,
     FailOn,

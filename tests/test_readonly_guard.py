@@ -6,7 +6,7 @@ import boto3
 import pytest
 from moto import mock_aws
 
-from aws_barnacle.session import (
+from sar_aws_barnacle.session import (
     READ_ONLY_PREFIXES,
     ClientFactory,
     ReadOnlyViolationError,

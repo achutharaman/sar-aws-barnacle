@@ -14,8 +14,8 @@ from rich.console import Console
 from rich.table import Table
 from rich.text import Text
 
-from aws_barnacle.config import Config
-from aws_barnacle.models import CostConfidence, ScanResult, Severity
+from sar_aws_barnacle.config import Config
+from sar_aws_barnacle.models import CostConfidence, ScanResult, Severity
 
 SEVERITY_STYLE = {
     Severity.HIGH: "bold red",

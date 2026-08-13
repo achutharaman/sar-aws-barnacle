@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from aws_barnacle.models import Finding, Scope
-from aws_barnacle.registry import (
+from sar_aws_barnacle.models import Finding, Scope
+from sar_aws_barnacle.registry import (
     DuplicateCheckError,
     InvalidCheckError,
     all_checks,

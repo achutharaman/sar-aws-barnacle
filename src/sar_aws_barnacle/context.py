@@ -14,9 +14,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from aws_barnacle.config import Config
-from aws_barnacle.pricing.base import PriceBook
-from aws_barnacle.session import ClientFactory
+from sar_aws_barnacle.config import Config
+from sar_aws_barnacle.pricing.base import PriceBook
+from sar_aws_barnacle.session import ClientFactory
 
 
 @dataclass(frozen=True, slots=True)

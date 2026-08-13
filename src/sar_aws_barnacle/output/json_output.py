@@ -15,8 +15,8 @@ from __future__ import annotations
 import json
 from typing import Any, TextIO
 
-from aws_barnacle.config import Config
-from aws_barnacle.models import SCHEMA_VERSION, Finding, ScanResult
+from sar_aws_barnacle.config import Config
+from sar_aws_barnacle.models import SCHEMA_VERSION, Finding, ScanResult
 
 
 def finding_to_dict(finding: Finding) -> dict[str, Any]:

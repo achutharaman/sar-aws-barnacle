@@ -7,8 +7,8 @@ import json
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from aws_barnacle.config import Config, OutputFormat
-from aws_barnacle.models import (
+from sar_aws_barnacle.config import Config, OutputFormat
+from sar_aws_barnacle.models import (
     SCHEMA_VERSION,
     CheckError,
     CostConfidence,
@@ -16,8 +16,8 @@ from aws_barnacle.models import (
     ScanResult,
     Severity,
 )
-from aws_barnacle.output.base import get_renderer
-from aws_barnacle.output.json_output import JsonRenderer, result_to_dict
+from sar_aws_barnacle.output.base import get_renderer
+from sar_aws_barnacle.output.json_output import JsonRenderer, result_to_dict
 
 
 def _result(**overrides) -> ScanResult:

@@ -14,9 +14,9 @@ import pytest
 from moto import mock_aws
 from typer.testing import CliRunner
 
-from aws_barnacle import __version__
-from aws_barnacle.cli import app
-from aws_barnacle.config import ExitCode
+from sar_aws_barnacle import __version__
+from sar_aws_barnacle.cli import app
+from sar_aws_barnacle.config import ExitCode
 
 REGION = "ap-south-1"
 runner = CliRunner()

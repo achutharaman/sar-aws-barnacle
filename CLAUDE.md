@@ -18,7 +18,7 @@ an explicit design discussion.
 - Small commits, conventional-commit messages (feat:, fix:, test:, docs:).
 
 ## Hard rules (structural, tested — do not weaken)
-- Adding a check touches exactly two files: src/aws_barnacle/checks/<id>.py
+- Adding a check touches exactly two files: src/sar_aws_barnacle/checks/<id>.py
   and tests/checks/test_<id>.py. If a check requires touching core, stop
   and flag it — that's an architecture failure, not a workaround target.
 - Every check declares required_actions; after adding one, run
