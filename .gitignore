@@ -22,7 +22,7 @@ htmlcov/
 *.swp
 .DS_Store
 
-# barnacle
+# sar-aws-barnacle
 prices.cache.json
 scan-report.json
 

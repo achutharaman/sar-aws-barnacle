@@ -6,8 +6,9 @@ becomes a recorded ``CheckError`` and the scan continues. A tool that aborts the
 whole run because one IAM permission was missing is useless in CI, and losing
 five checks' worth of findings to one AccessDenied is a bad trade.
 
-The one exception is ``ReadOnlyViolationError``. That means barnacle itself
-tried to mutate a resource, which is a bug in this codebase, and it propagates.
+The one exception is ``ReadOnlyViolationError``. That means sar-aws-barnacle
+itself tried to mutate a resource, which is a bug in this codebase, and it
+propagates.
 """
 
 from __future__ import annotations
@@ -69,7 +70,7 @@ def run_scan(
     units = plan_units(checks, regions)
     workers = max(1, min(config.max_workers, len(units) or 1))
 
-    with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="barnacle") as pool:
+    with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="sar-aws-barnacle") as pool:
         futures = {
             pool.submit(_run_unit, check, region, factory, config, prices, reference_time): (
                 check,

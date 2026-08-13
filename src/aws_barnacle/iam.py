@@ -14,7 +14,7 @@ from typing import Any
 from aws_barnacle.registry import Check, all_checks
 
 POLICY_VERSION = "2012-10-17"
-SID = "BarnacleReadOnlyScan"
+SID = "SarAwsBarnacleReadOnlyScan"
 
 # Needed by the runner itself rather than by any single check: account id for
 # the report header, and enabled-region discovery for --all-regions.

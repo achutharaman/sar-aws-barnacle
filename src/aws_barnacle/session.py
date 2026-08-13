@@ -27,14 +27,14 @@ READ_ONLY_PREFIXES: tuple[str, ...] = (
     "Head",
 )
 
-USER_AGENT_SUFFIX = "aws-barnacle"
+USER_AGENT_SUFFIX = "sar-aws-barnacle"
 
 
 class ReadOnlyViolationError(RuntimeError):
     """A check attempted a mutating AWS API call.
 
-    This is always a bug in barnacle itself, never a user error, so the runner
-    deliberately does *not* swallow it into a CheckError.
+    This is always a bug in sar-aws-barnacle itself, never a user error, so the
+    runner deliberately does *not* swallow it into a CheckError.
     """
 
 
@@ -44,14 +44,16 @@ def _guard_handler(model=None, **_kwargs) -> None:
         return
     if not operation.startswith(READ_ONLY_PREFIXES):
         raise ReadOnlyViolationError(
-            f"blocked non-read-only AWS call: {operation!r}. barnacle never mutates "
+            f"blocked non-read-only AWS call: {operation!r}. sar-aws-barnacle never mutates "
             f"resources; allowed operation prefixes are {', '.join(READ_ONLY_PREFIXES)}"
         )
 
 
 def install_read_only_guard(session: boto3.Session) -> None:
     """Register the guard on every client created from this session."""
-    session.events.register("before-call", _guard_handler, unique_id="barnacle-read-only-guard")
+    session.events.register(
+        "before-call", _guard_handler, unique_id="sar-aws-barnacle-read-only-guard"
+    )
 
 
 @dataclass

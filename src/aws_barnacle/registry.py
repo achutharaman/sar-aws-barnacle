@@ -46,7 +46,7 @@ class Check(Protocol):
     required_actions: ClassVar[frozenset[str]]
     """IAM actions this check calls, e.g. ``{"ec2:DescribeVolumes"}``.
 
-    This is not documentation -- ``barnacle iam-policy`` unions these across the
+    This is not documentation -- ``sar-aws-barnacle iam-policy`` unions these across the
     registry to *generate* the least-privilege policy, and CI asserts the
     committed ``docs/iam-policy.json`` still matches. The README's IAM policy
     therefore cannot drift from what the code actually calls."""

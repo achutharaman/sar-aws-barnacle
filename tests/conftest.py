@@ -32,7 +32,12 @@ def fake_aws_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
         "AWS_DEFAULT_REGION": TEST_REGION,
     }.items():
         monkeypatch.setenv(key, value)
-    for key in ("AWS_PROFILE", "BARNACLE_PROFILE", "BARNACLE_REGIONS", "BARNACLE_OUTPUT"):
+    for key in (
+        "AWS_PROFILE",
+        "SAR_AWS_BARNACLE_PROFILE",
+        "SAR_AWS_BARNACLE_REGIONS",
+        "SAR_AWS_BARNACLE_OUTPUT",
+    ):
         monkeypatch.delenv(key, raising=False)
 
 

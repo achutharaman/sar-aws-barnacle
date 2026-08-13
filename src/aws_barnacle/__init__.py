@@ -1,4 +1,4 @@
-"""barnacle -- read-only AWS cost-waste and hygiene scanner."""
+"""sar-aws-barnacle -- read-only AWS cost-waste and hygiene scanner."""
 
 from __future__ import annotations
 
