@@ -139,8 +139,9 @@ def test_all_regions_discovers_from_the_account(waste):
 
 
 def test_config_file_is_honoured(waste, tmp_path, monkeypatch):
-    (tmp_path / "barnacle.toml").write_text(
-        '[barnacle]\nfail_on = "high"\n\n[barnacle.checks.ebs-unattached]\nhigh_severity_usd = 5\n'
+    (tmp_path / "sar-aws-barnacle.toml").write_text(
+        '[sar-aws-barnacle]\nfail_on = "high"\n\n'
+        "[sar-aws-barnacle.checks.ebs-unattached]\nhigh_severity_usd = 5\n"
     )
     monkeypatch.chdir(tmp_path)
     result = _scan()
@@ -148,7 +149,7 @@ def test_config_file_is_honoured(waste, tmp_path, monkeypatch):
 
 
 def test_cli_flag_overrides_config_file(waste, tmp_path, monkeypatch):
-    (tmp_path / "barnacle.toml").write_text('[barnacle]\nfail_on = "high"\n')
+    (tmp_path / "sar-aws-barnacle.toml").write_text('[sar-aws-barnacle]\nfail_on = "high"\n')
     monkeypatch.chdir(tmp_path)
     result = _scan("--fail-on", "none")
     assert result.exit_code == ExitCode.CLEAN

@@ -11,7 +11,7 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Read-only enforcement via a botocore `before-call` guard.
 - `ebs-unattached` check with cost estimation and confidence levels.
 - Table and JSON renderers; JSON carries `schema_version` 1.0.
-- Generated least-privilege IAM policy (`barnacle iam-policy`), verified in CI.
+- Generated least-privilege IAM policy (`sar-aws-barnacle iam-policy`), verified in CI.
 - AWS Pricing API integration with a 30-day disk cache and bundled seed fallback.
 
 [Unreleased]: https://github.com/achutharaman/sar-aws-barnacle/commits/main

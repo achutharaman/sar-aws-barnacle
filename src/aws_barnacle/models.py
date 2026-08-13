@@ -129,7 +129,7 @@ class CheckError:
 
 @dataclass(frozen=True, slots=True)
 class ScanResult:
-    """Everything one ``barnacle scan`` produced."""
+    """Everything one ``sar-aws-barnacle scan`` produced."""
 
     findings: tuple[Finding, ...]
     errors: tuple[CheckError, ...]

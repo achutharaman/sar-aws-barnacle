@@ -53,7 +53,7 @@ class TableRenderer:
         console = Console(file=stream, width=self.width, highlight=False)
         findings = result.sorted_findings()
 
-        header = f"barnacle scan · {len(result.regions)} region(s)"
+        header = f"sar-aws-barnacle scan · {len(result.regions)} region(s)"
         if result.account_id:
             header += f" · account {result.account_id}"
         console.print(Text(header, style="bold"))

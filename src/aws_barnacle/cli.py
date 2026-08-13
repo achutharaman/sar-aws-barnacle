@@ -36,7 +36,7 @@ from aws_barnacle.runner import run_scan
 from aws_barnacle.session import ClientFactory
 
 app = typer.Typer(
-    name="barnacle",
+    name="sar-aws-barnacle",
     help="Read-only AWS cost-waste and hygiene scanner. Reports; never deletes.",
     no_args_is_help=True,
     add_completion=False,
@@ -114,7 +114,7 @@ def scan(
         bool, typer.Option("--refresh-prices", help="Ignore the price cache and refetch.")
     ] = False,
     config_file: Annotated[
-        Path | None, typer.Option("--config", help="Path to barnacle.toml.")
+        Path | None, typer.Option("--config", help="Path to sar-aws-barnacle.toml.")
     ] = None,
     verbose: Annotated[bool, typer.Option("--verbose", "-v", help="Debug logging.")] = False,
 ) -> None:

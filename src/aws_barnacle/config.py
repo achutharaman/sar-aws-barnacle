@@ -1,6 +1,6 @@
 """Configuration resolution.
 
-Precedence, highest wins: CLI flags > environment (``BARNACLE_*``) > config file
+Precedence, highest wins: CLI flags > environment (``SAR_AWS_BARNACLE_*``) > config file
 > defaults. Per-check settings live in a nested table keyed by check id, so a
 new check can add tunables without this module changing.
 
@@ -18,8 +18,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-CONFIG_FILENAMES = ("barnacle.toml", ".barnacle.toml")
-ENV_PREFIX = "BARNACLE_"
+CONFIG_FILENAMES = ("sar-aws-barnacle.toml", ".sar-aws-barnacle.toml")
+ENV_PREFIX = "SAR_AWS_BARNACLE_"
 
 
 class OutputFormat(StrEnum):
@@ -28,7 +28,7 @@ class OutputFormat(StrEnum):
 
 
 class FailOn(StrEnum):
-    """What makes ``barnacle scan`` exit non-zero."""
+    """What makes ``sar-aws-barnacle scan`` exit non-zero."""
 
     NONE = "none"
     """Only infrastructure errors fail. Findings are informational."""
@@ -51,7 +51,7 @@ class ExitCode:
 def _default_cache_dir() -> Path:
     base = os.environ.get("XDG_CACHE_HOME")
     root = Path(base) if base else Path.home() / ".cache"
-    return root / "aws-barnacle"
+    return root / "sar-aws-barnacle"
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,7 +106,7 @@ def load_config(path: Path | None = None, *, search: bool = True) -> Config:
     if resolved is not None:
         with resolved.open("rb") as fh:
             raw = tomllib.load(fh)
-        data = raw.get("barnacle", raw)
+        data = raw.get("sar-aws-barnacle", raw)
 
     options = {
         str(k): dict(v) for k, v in (data.get("checks") or {}).items() if isinstance(v, dict)

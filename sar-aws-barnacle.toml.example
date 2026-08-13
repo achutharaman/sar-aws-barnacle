@@ -1,14 +1,14 @@
-# Copy to barnacle.toml. Discovered from the working directory upwards.
-# Precedence, highest first: CLI flags -> BARNACLE_* env vars -> this file -> defaults.
+# Copy to sar-aws-barnacle.toml. Discovered from the working directory upwards.
+# Precedence, highest first: CLI flags -> SAR_AWS_BARNACLE_* env vars -> this file -> defaults.
 
-[barnacle]
+[sar-aws-barnacle]
 # Regions to scan when --region is not passed.
 regions = ["ap-south-1"]
 
 # "table" (default) or "json".
 output = "table"
 
-# Minimum severity that makes `barnacle scan` exit 1: none | any | low | medium | high.
+# Minimum severity that makes `sar-aws-barnacle scan` exit 1: none | any | low | medium | high.
 # Errors always exit 2 regardless of this setting.
 fail_on = "none"
 
@@ -24,7 +24,7 @@ max_workers = 8
 
 # Per-check tunables, keyed by check id. Unknown keys are ignored, so a config
 # written for a newer version stays valid.
-[barnacle.checks.ebs-unattached]
+[sar-aws-barnacle.checks.ebs-unattached]
 # Findings at or above this monthly cost are HIGH rather than MEDIUM.
 high_severity_usd = 20
 # Ignore volumes created more recently than this, to avoid flagging churn

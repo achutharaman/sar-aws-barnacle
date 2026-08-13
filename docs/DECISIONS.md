@@ -4,7 +4,7 @@ The living spec. Updated whenever scope or a design choice changes, so neither o
 us has to reconstruct "why is it like this?" from a long conversation.
 
 **Status:** v0.1 scaffolding complete — core engine and one check, green tests.
-**Last updated:** 2026-08-12
+**Last updated:** 2026-08-13
 
 ---
 
@@ -27,12 +27,22 @@ resources were pointless.
 |---|---|---|
 | PyPI distribution | `sar-aws-barnacle` | `barnacle` is taken on PyPI by a tensor-decomposition library and an older progress-bar package |
 | Import package | `aws_barnacle` | Top-level import names share one namespace; `barnacle` would collide in site-packages |
-| CLI commands | `barnacle`, `aws-barnacle` | Two console scripts, one callable. Short name to type, unambiguous name for CI |
+| CLI command | `sar-aws-barnacle` | One console script, matching the distribution name exactly |
 | GitHub repo | `sar-aws-barnacle` | Matches the distribution |
 
 "Janitor" was rejected: it promises deletion, and this tool deliberately does not
 delete. The lint metaphor carries the right contract — read-only, severities,
 exit codes.
+
+**2026-08-13 revision:** the CLI command was originally the short `barnacle`
+(plus an `aws-barnacle` alias for scripts/CI), on the reasoning that a short
+name is nicer to type daily. That was superseded: every project in this
+author's portfolio uses a `sar-aws-*` prefix for AWS-focused tools, so the CLI
+command, config filename (`sar-aws-barnacle.toml`), env var prefix
+(`SAR_AWS_BARNACLE_*`), and IAM policy Sid now all match the distribution name
+for consistency across the portfolio. The import package stays `aws_barnacle`
+regardless — that one is a PyPI-collision constraint, not a style choice, so it
+does not move with the rest.
 
 ---
 
@@ -103,7 +113,7 @@ required_actions  # frozenset of IAM actions
 `scope` exists because IAM is global with a regional-looking endpoint. Without
 it, a six-region scan reports every stale access key six times.
 
-`required_actions` is not documentation. `barnacle iam-policy` unions it across
+`required_actions` is not documentation. `sar-aws-barnacle iam-policy` unions it across
 the registry to *generate* the policy, and CI asserts `docs/iam-policy.json`
 still matches. The README's policy therefore cannot drift from what the code
 calls, and a check that forgets to declare a permission fails the build.
@@ -150,7 +160,7 @@ The cache-and-fallback design keeps the intent (accurate live prices) while
 keeping tests hermetic and the tool usable under a pure-describe policy.
 
 ```
---live-pricing      default: fetch, cache 30d at ~/.cache/aws-barnacle/
+--live-pricing      default: fetch, cache 30d at ~/.cache/sar-aws-barnacle/
 --no-live-pricing   bundled seed only — offline, deterministic, CI-safe
 --refresh-prices    bust the cache
 ```
@@ -171,7 +181,7 @@ wire and raises `ReadOnlyViolationError` on anything outside
 `Describe`/`Get`/`List`/`BatchGet`/`Lookup`/`Head`.
 
 The runner deliberately does **not** swallow this into a `CheckError` the way it
-swallows `AccessDenied`. A blocked mutation means barnacle itself has a bug, so
+swallows `AccessDenied`. A blocked mutation means sar-aws-barnacle itself has a bug, so
 it must fail loudly rather than degrade quietly.
 
 `ClientFactory(read_only=False)` is the seam a future `--fix` mode will use. It
@@ -224,7 +234,7 @@ question, not a clean bill of health.
 
 - [ ] Verify seed prices against a live scan before first PyPI publish
 - [ ] Demo GIF for the README (asciinema → gif)
-- [ ] Does `--fix` become a separate `barnacle fix` command with plan/apply, or a
+- [ ] Does `--fix` become a separate `sar-aws-barnacle fix` command with plan/apply, or a
       flag on `scan`? Leaning separate command
 - [ ] Coverage gate in CI — what threshold, and does it apply to `cli.py`?
 - [ ] `--output sarif` for GitHub code-scanning integration? Speculative

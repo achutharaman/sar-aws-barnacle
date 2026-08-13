@@ -41,11 +41,10 @@ Homepage = "https://github.com/achutharaman/sar-aws-barnacle"
 Issues = "https://github.com/achutharaman/sar-aws-barnacle/issues"
 Changelog = "https://github.com/achutharaman/sar-aws-barnacle/blob/main/CHANGELOG.md"
 
-# Two console scripts, one callable. `barnacle` is what you type day to day;
-# `aws-barnacle` is the unambiguous name for scripts and CI.
+# One console script. The sar-aws-* prefix is a portfolio-wide naming
+# convention, so the command name matches the PyPI distribution exactly.
 [project.scripts]
-barnacle = "aws_barnacle.cli:app"
-aws-barnacle = "aws_barnacle.cli:app"
+sar-aws-barnacle = "aws_barnacle.cli:app"
 
 # Extension seam: third-party packages can ship checks by advertising this
 # entry-point group. Nothing in this repo needs to change for them to load.

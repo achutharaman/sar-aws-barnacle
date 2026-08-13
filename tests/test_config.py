@@ -15,19 +15,19 @@ from aws_barnacle.config import (
 )
 
 CONFIG_TOML = """
-[barnacle]
+[sar-aws-barnacle]
 output = "json"
 fail_on = "high"
 regions = ["ap-south-1", "us-east-1"]
 
-[barnacle.checks.ebs-unattached]
+[sar-aws-barnacle.checks.ebs-unattached]
 high_severity_usd = 50
 min_age_days = 7
 """
 
 
 def test_loads_file(tmp_path: Path):
-    path = tmp_path / "barnacle.toml"
+    path = tmp_path / "sar-aws-barnacle.toml"
     path.write_text(CONFIG_TOML)
 
     config = load_config(path)
@@ -38,7 +38,7 @@ def test_loads_file(tmp_path: Path):
 
 
 def test_per_check_options_are_typed(tmp_path: Path):
-    path = tmp_path / "barnacle.toml"
+    path = tmp_path / "sar-aws-barnacle.toml"
     path.write_text(CONFIG_TOML)
     config = load_config(path)
 
@@ -48,10 +48,10 @@ def test_per_check_options_are_typed(tmp_path: Path):
 
 
 def test_env_overrides_file(tmp_path: Path, monkeypatch):
-    path = tmp_path / "barnacle.toml"
+    path = tmp_path / "sar-aws-barnacle.toml"
     path.write_text(CONFIG_TOML)
-    monkeypatch.setenv("BARNACLE_OUTPUT", "table")
-    monkeypatch.setenv("BARNACLE_REGIONS", "eu-west-1")
+    monkeypatch.setenv("SAR_AWS_BARNACLE_OUTPUT", "table")
+    monkeypatch.setenv("SAR_AWS_BARNACLE_REGIONS", "eu-west-1")
 
     config = load_config(path)
 

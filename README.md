@@ -1,4 +1,4 @@
-# barnacle
+# sar-aws-barnacle
 
 **A read-only linter for AWS account waste.** Scans for resources you are paying for and not using, prints what they cost you, and never touches a thing.
 
@@ -15,17 +15,17 @@ Cloud waste is boring, invisible, and continuous. An EBS volume detached during 
 
 AWS Cost Explorer tells you *what you spent*. It does not tell you *which specific resources were pointless*. Existing cleanup tools mostly solve the opposite problem: they delete things, which means nobody is allowed to run them against production.
 
-barnacle sits in the gap. It answers one question — **"what am I paying for that nothing is using?"** — and answers it with resource IDs, dollar figures, and an exit code you can wire into CI. It has no delete path at all.
+sar-aws-barnacle sits in the gap. It answers one question — **"what am I paying for that nothing is using?"** — and answers it with resource IDs, dollar figures, and an exit code you can wire into CI. It has no delete path at all.
 
 ## Demo
 
-<!-- TODO: replace with an asciinema recording or GIF of `barnacle scan` -->
-![barnacle scan demo](docs/demo.gif)
+<!-- TODO: replace with an asciinema recording or GIF of `sar-aws-barnacle scan` -->
+![sar-aws-barnacle scan demo](docs/demo.gif)
 
 ```
-$ barnacle scan --region ap-south-1
+$ sar-aws-barnacle scan --region ap-south-1
 
-barnacle scan · 1 region(s) · account 123456789012
+sar-aws-barnacle scan · 1 region(s) · account 123456789012
 
 ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Severity ┃ Check         ┃ Region     ┃ Resource              ┃ Monthly ┃ Detail                           ┃
@@ -49,38 +49,38 @@ pipx install sar-aws-barnacle    # recommended: isolated, on your PATH
 pip install sar-aws-barnacle
 ```
 
-Both `barnacle` and `aws-barnacle` are installed as commands.
+The `sar-aws-barnacle` command is installed on your `PATH`.
 
 ## Usage
 
 ```bash
 # Scan your default region using your default credentials
-barnacle scan
+sar-aws-barnacle scan
 
 # A specific region and profile
-barnacle scan --region ap-south-1 --profile prod-readonly
+sar-aws-barnacle scan --region ap-south-1 --profile prod-readonly
 
 # Several regions at once
-barnacle scan -r ap-south-1 -r eu-west-1 -r us-east-1
+sar-aws-barnacle scan -r ap-south-1 -r eu-west-1 -r us-east-1
 
 # Every region enabled on the account
-barnacle scan --all-regions
+sar-aws-barnacle scan --all-regions
 
 # Machine-readable, for pipelines and dashboards
-barnacle scan --output json > findings.json
+sar-aws-barnacle scan --output json > findings.json
 
 # Only certain checks
-barnacle scan --check ebs-unattached
+sar-aws-barnacle scan --check ebs-unattached
 
 # Hide small change
-barnacle scan --min-savings 10
+sar-aws-barnacle scan --min-savings 10
 
 # No network calls for pricing — bundled table only
-barnacle scan --no-live-pricing
+sar-aws-barnacle scan --no-live-pricing
 
 # What checks exist, and what permissions do they need?
-barnacle checks
-barnacle iam-policy
+sar-aws-barnacle checks
+sar-aws-barnacle iam-policy
 ```
 
 ### Exit codes
@@ -98,21 +98,21 @@ By default (`--fail-on none`) findings are informational and only real errors fa
 
 ```yaml
 - name: Check for AWS waste
-  run: barnacle scan --all-regions --fail-on high
+  run: sar-aws-barnacle scan --all-regions --fail-on high
 ```
 
 Note that errors outrank findings. A scan that could not complete is an unanswered question, not a clean bill of health.
 
 ## IAM policy
 
-barnacle needs read access and nothing else. This policy is **generated from the code** — every check declares the API calls it makes, and CI fails if this file drifts from what the code actually calls. Regenerate the exact policy for your selection of checks with `barnacle iam-policy`.
+sar-aws-barnacle needs read access and nothing else. This policy is **generated from the code** — every check declares the API calls it makes, and CI fails if this file drifts from what the code actually calls. Regenerate the exact policy for your selection of checks with `sar-aws-barnacle iam-policy`.
 
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "BarnacleReadOnlyScan",
+      "Sid": "SarAwsBarnacleReadOnlyScan",
       "Effect": "Allow",
       "Action": [
         "ec2:DescribeRegions",
@@ -125,22 +125,22 @@ barnacle needs read access and nothing else. This policy is **generated from the
 }
 ```
 
-Add `pricing:GetProducts` if you want live pricing. Without it, barnacle falls back to its bundled price table and says so in the report footer.
+Add `pricing:GetProducts` if you want live pricing. Without it, sar-aws-barnacle falls back to its bundled price table and says so in the report footer.
 
 If you would rather trust nothing: AWS's own `ReadOnlyAccess` managed policy is a superset of the above.
 
 ## Configuration
 
-Optional `barnacle.toml`, discovered from the working directory upwards. Precedence, highest first: **CLI flags → `BARNACLE_*` env vars → config file → defaults**.
+Optional `sar-aws-barnacle.toml`, discovered from the working directory upwards. Precedence, highest first: **CLI flags → `SAR_AWS_BARNACLE_*` env vars → config file → defaults**.
 
 ```toml
-[barnacle]
+[sar-aws-barnacle]
 regions = ["ap-south-1", "eu-west-1"]
 output = "table"
 fail_on = "high"
 min_monthly_savings = 5
 
-[barnacle.checks.ebs-unattached]
+[sar-aws-barnacle.checks.ebs-unattached]
 high_severity_usd = 50
 min_age_days = 7
 ```
