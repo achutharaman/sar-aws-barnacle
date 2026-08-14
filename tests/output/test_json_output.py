@@ -121,8 +121,18 @@ def test_region_status_and_skipped_regions_are_reported():
     payload = _render(result)
 
     assert payload["skipped_regions"] == ["me-south-1"]
-    assert {"region": "me-south-1", "status": "skipped — not enabled for this account"} in (
-        payload["region_status"]
-    )
-    assert {"region": "ap-south-1", "status": "1 finding(s)"} in payload["region_status"]
-    assert {"region": "eu-north-1", "status": "1 finding(s)"} in payload["region_status"]
+    assert {
+        "region": "me-south-1",
+        "check_id": None,
+        "status": "skipped — not enabled for this account",
+    } in payload["region_status"]
+    assert {
+        "region": "ap-south-1",
+        "check_id": "ebs-unattached",
+        "status": "1 finding(s)",
+    } in payload["region_status"]
+    assert {
+        "region": "eu-north-1",
+        "check_id": "ebs-unattached",
+        "status": "1 finding(s)",
+    } in payload["region_status"]

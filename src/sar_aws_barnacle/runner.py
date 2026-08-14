@@ -98,6 +98,7 @@ def run_scan(
         started_at=started,
         duration_seconds=round(time.perf_counter() - clock_start, 3),
         account_id=account_id,
+        global_checks=frozenset(c.id for c in checks if c.scope is Scope.GLOBAL),
     )
 
 

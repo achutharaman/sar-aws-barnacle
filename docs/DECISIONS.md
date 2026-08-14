@@ -3,8 +3,8 @@
 The living spec. Updated whenever scope or a design choice changes, so neither of
 us has to reconstruct "why is it like this?" from a long conversation.
 
-**Status:** v0.1 scaffolding complete — core engine and one check, green tests.
-**Last updated:** 2026-08-13
+**Status:** v0.1 scaffolding complete — core engine and two checks, green tests.
+**Last updated:** 2026-08-14
 
 ---
 
@@ -64,11 +64,27 @@ mockable offline with moto, and covered by a single read-only IAM policy.
 | Check | Status | Notes |
 |---|---|---|
 | `ebs-unattached` | **Done** | Volumes in `available` state. Exact cost by size × type |
+| `ebs-unencrypted` | **Done** | Security/hygiene, not cost-waste — see note below |
 | `eip-unassociated` | Next | Trivial, exact cost |
 | `ec2-stopped` | Planned | Stopped longer than N days |
 | `ebs-snapshot-age` | Planned | Age only; cost is an upper bound (see §5) |
 | `rds-snapshot-age` | Planned | Same shape as above, different API |
 | `iam-stale-keys` | Planned | Old and never-used keys. Global scope. Highest signal per line of code |
+
+**2026-08-14 addition: `ebs-unencrypted`.** Flagged before implementing,
+built anyway: this is a security/hygiene finding, not a cost-waste one —
+encryption status has zero bearing on what a volume costs, so it doesn't
+really answer §1's "what am I paying for that nothing is using?" It was
+added on explicit request rather than blocked on the mismatch, because it
+fits the existing architecture without touching core: same
+`ec2:DescribeVolumes` permission already granted, and
+`CostConfidence.UNKNOWN` is already the correct, honest answer for "this
+check has no cost claim to make" — not a workaround stretched to fit. Every
+finding it produces carries `estimated_monthly_cost=None`, so it never
+contributes to "Estimated monthly waste." One exception isn't a pattern; if
+more non-cost checks show up, this tool's identity as a pure cost-waste
+scanner is worth an explicit revisit rather than drifting into a general
+hygiene/CSPM tool by accretion.
 
 ### Deferred to v0.3
 
@@ -127,6 +143,22 @@ it, a six-region scan reports every stale access key six times.
 the registry to *generate* the policy, and CI asserts `docs/iam-policy.json`
 still matches. The README's policy therefore cannot drift from what the code
 calls, and a check that forgets to declare a permission fails the build.
+
+**The "two files" guarantee extends to reporting, not just detection.**
+`ScanResult.region_check_status()` is what both renderers use to show a
+per-region, per-check breakdown (every scanned region × every check that
+ran, "clean" included, not just findings) — and it's derived entirely from
+`checks_run`, `regions`, `findings`, and `errors`. A new check needs zero
+changes here or in either renderer to appear in that breakdown. If a check
+ever *does* need one, that's the same architecture-failure signal as
+needing to touch core for the check itself — stop and flag it, don't
+hand-wire per-check rendering. The one piece of metadata this needed beyond
+what checks already declare: `ScanResult.global_checks` (which of
+`checks_run` are `Scope.GLOBAL`), populated by `run_scan()` from the same
+`Check.scope` every check already sets — a global check reports exactly
+once against the synthetic `"global"` region, not once per real region,
+and a heuristic based on where its findings happened to land can't tell
+"global, zero findings" apart from "regional, never checked here."
 
 ---
 

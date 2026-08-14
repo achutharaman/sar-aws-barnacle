@@ -28,11 +28,11 @@ $ sar-aws-barnacle scan --region ap-south-1
 sar-aws-barnacle scan · 1 region(s) · account 123456789012
 
 Regions
-┏━━━━━━━━━━━━┳━━━━━━━━━━━━━━┓
-┃ Region     ┃ Status       ┃
-┡━━━━━━━━━━━━╇━━━━━━━━━━━━━━┩
-│ ap-south-1 │ 2 finding(s) │
-└────────────┴──────────────┘
+┏━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Region     ┃ ebs-unattached ┃ ebs-unencrypted ┃
+┡━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ ap-south-1 │ 2 finding(s)   │ clean           │
+└────────────┴────────────────┴─────────────────┘
 
 ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Severity ┃ Check         ┃ Region     ┃ Resource              ┃ Monthly ┃ Detail                           ┃
@@ -44,7 +44,7 @@ Regions
 └──────────┴───────────────┴────────────┴───────────────────────┴─────────┴──────────────────────────────────┘
 
 Estimated monthly waste: $100.32  ($1,203.84/year)
-2 finding(s) across 1 check(s) in 0.84s
+2 finding(s) across 2 check(s) in 0.84s
 Prices: AWS Pricing API (cached)
 ```
 
@@ -90,7 +90,7 @@ sar-aws-barnacle checks
 sar-aws-barnacle iam-policy
 ```
 
-Every report opens with a **Regions** table listing every region considered — scanned-and-clean regions included, not just ones with findings, so you can tell "checked, found nothing" apart from "never looked." A region passed to `-r` that isn't actually enabled for the account is skipped before the scan starts rather than attempted and left to fail, and shows up there as `skipped`. `--all-regions` already only ever considers enabled regions, so nothing is skipped there.
+Every report opens with a **Regions** table: one row per region, one column per check, so the whole scan's coverage reads as a single grid — scanned-and-clean included, not just cells with findings, so you can tell "checked, found nothing" apart from "never looked," per check. This is fully automatic: a new check appears as a new column the moment it's registered, with no changes anywhere else. A region passed to `-r` that isn't actually enabled for the account is skipped before the scan starts rather than attempted and left to fail — it's reported separately as `Skipped (not enabled for this account): ...` rather than as blank cells, since it was never scanned at all. `--all-regions` already only ever considers enabled regions, so nothing is skipped there.
 
 ### Exit codes
 
@@ -298,6 +298,7 @@ Then run `python scripts/generate_iam_policy.py` so the published policy covers 
 **v0.1 — shipped**
 - [x] Core engine, registry, read-only guard, pricing, table + JSON output
 - [x] `ebs-unattached`
+- [x] `ebs-unencrypted` — security/hygiene, not cost-waste; see [`docs/DECISIONS.md`](docs/DECISIONS.md) §3
 
 **v0.2 — in progress**
 - [ ] `eip-unassociated` — unassociated Elastic IPs
