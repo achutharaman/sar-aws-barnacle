@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
+from types import MappingProxyType
 
 SCHEMA_VERSION = "1.0"
 GLOBAL_REGION = "global"
@@ -29,10 +30,17 @@ class Severity(StrEnum):
     def rank(self) -> int:
         return _SEVERITY_RANK[self]
 
+    # StrEnum inherits str's __lt__/__le__/__gt__/__ge__, which compare
+    # members alphabetically ("high" < "low") rather than by severity. Rather
+    # than override just __lt__ (which would make the four operators disagree
+    # with each other -- a worse trap than today's alphabetical-everywhere
+    # behaviour), comparison is disabled outright: .rank is the one ordering
+    # mechanism, and misuse fails loudly instead of returning a plausible but
+    # wrong bool.
     def __lt__(self, other: object) -> bool:
-        if not isinstance(other, Severity):
-            return NotImplemented
-        return self.rank < other.rank
+        return NotImplemented
+
+    __le__ = __gt__ = __ge__ = __lt__
 
 
 _SEVERITY_RANK: dict[Severity, int] = {
@@ -104,6 +112,12 @@ class Finding:
                 f"{self.check_id}/{self.resource_id}: a cost was supplied without a "
                 f"confidence level; say how much to trust it"
             )
+
+        # frozen=True only blocks rebinding self.metadata, not mutating the dict
+        # it points to. A read-only copy closes that gap so the runner's
+        # lock-free fan-out (see the module docstring) can trust findings are
+        # actually immutable once yielded.
+        object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))
 
     @property
     def sort_key(self) -> tuple[int, Decimal, str]:

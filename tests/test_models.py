@@ -46,8 +46,43 @@ def test_findings_are_immutable():
         finding.severity = Severity.HIGH
 
 
+def test_finding_metadata_cannot_be_mutated():
+    """frozen=True only blocks rebinding finding.metadata, not mutating the
+    dict it points to -- this asserts the read-only copy actually closes
+    that gap."""
+    finding = _finding(metadata={"key": "value"})
+    with pytest.raises(TypeError):
+        finding.metadata["injected"] = "yes"
+
+
+def test_finding_metadata_is_a_copy_not_the_original():
+    """The caller's dict must not be mutable through the finding after the
+    fact, or the read-only wrapper is just theater around a live reference."""
+    original = {"key": "value"}
+    finding = _finding(metadata=original)
+    original["injected"] = "yes"
+    assert "injected" not in finding.metadata
+
+
 def test_severity_ordering():
     assert Severity.HIGH.rank > Severity.MEDIUM.rank > Severity.LOW.rank > Severity.INFO.rank
+
+
+@pytest.mark.parametrize(
+    "op",
+    [
+        lambda a, b: a < b,
+        lambda a, b: a <= b,
+        lambda a, b: a > b,
+        lambda a, b: a >= b,
+    ],
+)
+def test_severity_comparison_operators_are_disabled(op):
+    """StrEnum inherits str's alphabetical comparison ("high" < "low"), which
+    disagrees with .rank. Rather than leave that trap in place, comparison
+    operators are disabled outright -- .rank is the one ordering mechanism."""
+    with pytest.raises(TypeError):
+        op(Severity.LOW, Severity.HIGH)
 
 
 def test_sort_puts_high_severity_and_big_money_first():
