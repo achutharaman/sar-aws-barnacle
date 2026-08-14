@@ -162,6 +162,26 @@ def test_min_savings_filter_keeps_unpriced_findings():
     assert costs == {Decimal("50.00"), None}
 
 
+def test_on_progress_is_called_once_per_unit_and_reaches_total():
+    calls: list[tuple[int, int]] = []
+    result = run_scan(
+        [_make_check("a"), _make_check("b")],
+        ["ap-south-1", "us-east-1"],
+        factory=ClientFactory(),
+        config=Config(max_workers=2),
+        prices=NullPriceBook(),
+        now=NOW,
+        on_progress=lambda done, total: calls.append((done, total)),
+    )
+
+    # 2 checks x 2 regions = 4 units. Threaded completion order isn't
+    # guaranteed, so assert on the set of "done" counts reached, not order.
+    assert len(calls) == 4
+    assert {done for done, _total in calls} == {1, 2, 3, 4}
+    assert all(total == 4 for _done, total in calls)
+    assert len(result.findings) == 4
+
+
 def test_result_records_metadata():
     result = _run([_make_check("meta")], regions=("ap-south-1", "us-east-1"))
     assert result.regions == ("ap-south-1", "us-east-1")

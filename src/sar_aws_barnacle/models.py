@@ -152,6 +152,11 @@ class ScanResult:
     started_at: datetime
     duration_seconds: float
     account_id: str | None = None
+    # Regions the caller asked for (explicit -r, or a stale --all-regions
+    # candidate) that were excluded before the scan started because they
+    # are not enabled for this account. Skipped, not scanned -- no
+    # CheckError, no wasted timeout+retry.
+    skipped_regions: tuple[str, ...] = ()
 
     @property
     def estimated_monthly_savings(self) -> Decimal:
@@ -172,3 +177,24 @@ class ScanResult:
 
     def sorted_findings(self) -> list[Finding]:
         return sorted(self.findings, key=lambda f: f.sort_key)
+
+    def region_status(self) -> list[tuple[str, str]]:
+        """(region, status) for every region considered -- scanned or
+        skipped -- so a report always accounts for every region asked for,
+        not just the ones that happened to have findings."""
+        finding_counts: dict[str, int] = {}
+        for f in self.findings:
+            finding_counts[f.region] = finding_counts.get(f.region, 0) + 1
+        errored_regions = {e.region for e in self.errors}
+
+        lines = []
+        for region in self.regions:
+            count = finding_counts.get(region, 0)
+            if region in errored_regions:
+                status = f"{count} finding(s), check failed" if count else "check failed"
+            else:
+                status = f"{count} finding(s)" if count else "clean"
+            lines.append((region, status))
+        for region in self.skipped_regions:
+            lines.append((region, "skipped — not enabled for this account"))
+        return lines
