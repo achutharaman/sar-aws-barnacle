@@ -237,6 +237,46 @@ question, not a clean bill of health.
   Detail to one character or truncates the identifier columns instead.
 - **`min-savings` keeps unpriced findings** — filtering them would make the
   threshold a blindfold over the things we know least about.
+- **`--profile` falls back to `sar-aws-barnacle-scanner` if it exists** — the
+  README's setup walkthrough tells readers to create a profile with exactly
+  that name, so a bare `sar-aws-barnacle scan` should honour it without
+  requiring `--profile` on every invocation. Deliberately conditional:
+  `ClientFactory` checks `boto3.Session().available_profiles` first and only
+  passes the name through if it's actually configured, because
+  `boto3.Session(profile_name=...)` raises `ProfileNotFound` immediately for
+  a name that isn't. An unconditional default would have broken every
+  deployment that doesn't use that exact profile name — default credentials,
+  an instance role, CI OIDC — which is most of them.
+- **Explicit `connect_timeout=10` / `read_timeout=30`, and `retries=2` (1
+  retry, down from this project's own initial default of 5) on every
+  client** — found via a
+  real `--all-regions` run that appeared to hang at "33/34" on the progress
+  bar: `me-south-1` was unreachable from that network, and botocore's own
+  60s/60s timeout defaults meant even a small retry count took minutes to
+  finally fail, indistinguishable from a genuine hang. A scan is interactive
+  and synchronous, so one bad region's resilience against a transient blip
+  costs every other region's wait time too — one retry still absorbs a
+  blip; further attempts at a hard-down endpoint were never going to
+  succeed. `_run_unit` also logs at DEBUG when a unit starts, so `--verbose`
+  shows exactly which (check, region) pairs are still in flight if this
+  happens again.
+- **Disabled regions are skipped before scanning, not scanned and left to
+  fail** — the same investigation surfaced a second, unrelated bug:
+  `available_regions()` called `self.client("ec2", region_name="us-east-1")`,
+  but `client()`'s parameter is named `region`, not `region_name`. That
+  `TypeError`'d on every single call, silently caught by a broad `except`,
+  so the "real enabled regions" path had never once succeeded --
+  `--all-regions` always fell back to botocore's full static partition list
+  (every region it has ever heard of, opt-in or not) instead of the
+  account's actual ~17 enabled regions, doubling scan time and producing
+  `CheckError`s for regions that were never reachable to begin with. Fixed,
+  and `-r` is now also cross-checked against the account's real enabled
+  regions before the scan starts (not just `--all-regions`, which already
+  gets the enabled list directly) — a disabled region can't have findings,
+  it can only burn a timeout+retry. `ScanResult.region_status()` reports
+  every region considered, scanned-and-clean included, not just ones with
+  findings, so a reader can tell "checked, found nothing" apart from "never
+  looked" or "skipped, not enabled."
 
 ---
 

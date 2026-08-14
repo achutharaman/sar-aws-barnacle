@@ -59,6 +59,9 @@ class TableRenderer:
         console.print(Text(header, style="bold"))
         console.print()
 
+        console.print(self._regions_table(result))
+        console.print()
+
         if not findings:
             console.print(Text("No findings. Nothing obviously wasted.", style="bold green"))
         else:
@@ -182,6 +185,25 @@ class TableRenderer:
                     style="bold yellow",
                 )
             )
+
+    def _regions_table(self, result: ScanResult) -> Table:
+        """Every region considered gets a row -- scanned-and-clean regions
+        included, not just the ones with findings -- so a reader can tell
+        "checked, found nothing" apart from "never looked"."""
+        table = Table(title="Regions", header_style="bold", title_justify="left")
+        table.add_column("Region", no_wrap=True)
+        table.add_column("Status")
+        for region, status in result.region_status():
+            if status.startswith("skipped"):
+                style = "dim"
+            elif "failed" in status:
+                style = "yellow"
+            elif status == "clean":
+                style = "green"
+            else:
+                style = None
+            table.add_row(region, Text(status, style=style) if style else Text(status))
+        return table
 
     def _errors_table(self, result: ScanResult) -> Table:
         table = Table(title="Errors", header_style="bold yellow", title_justify="left")

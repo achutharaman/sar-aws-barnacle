@@ -27,16 +27,18 @@ def _finding(**overrides) -> Finding:
     return Finding(**base)
 
 
-def _render(findings=(), errors=()) -> str:
-    result = ScanResult(
-        findings=tuple(findings),
-        errors=tuple(errors),
-        regions=("ap-south-1",),
-        checks_run=("ebs-unattached",),
-        started_at=datetime(2026, 8, 12, tzinfo=UTC),
-        duration_seconds=0.5,
-        account_id="123456789012",
-    )
+def _render(findings=(), errors=(), **overrides) -> str:
+    base = {
+        "findings": tuple(findings),
+        "errors": tuple(errors),
+        "regions": ("ap-south-1",),
+        "checks_run": ("ebs-unattached",),
+        "started_at": datetime(2026, 8, 12, tzinfo=UTC),
+        "duration_seconds": 0.5,
+        "account_id": "123456789012",
+    }
+    base.update(overrides)
+    result = ScanResult(**base)
     stream = io.StringIO()
     TableRenderer(price_source="bundled seed table", width=200).render(result, Config(), stream)
     return stream.getvalue()
@@ -86,3 +88,18 @@ def test_partial_scan_is_flagged_loudly():
 
 def test_price_source_is_disclosed():
     assert "bundled seed table" in _render([_finding()])
+
+
+def test_clean_region_is_shown_as_clean_not_omitted():
+    """A scanned region with zero findings must still appear -- otherwise a
+    reader can't tell "checked, found nothing" apart from "never looked"."""
+    output = _render(regions=("ap-south-1", "eu-north-1"))
+    assert "ap-south-1" in output
+    assert "eu-north-1" in output
+    assert "clean" in output
+
+
+def test_skipped_region_is_shown_as_skipped():
+    output = _render(regions=("ap-south-1",), skipped_regions=("me-south-1",))
+    assert "me-south-1" in output
+    assert "skipped" in output

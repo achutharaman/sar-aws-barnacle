@@ -1,12 +1,13 @@
-"""Invariants on the Finding value type."""
+"""Invariants on the Finding value type, and ScanResult.region_status()."""
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
 
-from sar_aws_barnacle.models import CostConfidence, Finding, Severity
+from sar_aws_barnacle.models import CheckError, CostConfidence, Finding, ScanResult, Severity
 
 
 def _finding(**overrides):
@@ -100,3 +101,46 @@ def test_sort_puts_high_severity_and_big_money_first():
     )
     ordered = sorted([rich_medium, cheap_high], key=lambda f: f.sort_key)
     assert [f.resource_id for f in ordered] == ["a", "b"]
+
+
+def _result(**overrides) -> ScanResult:
+    base = {
+        "findings": (),
+        "errors": (),
+        "regions": ("ap-south-1",),
+        "checks_run": ("ebs-unattached",),
+        "started_at": datetime(2026, 8, 12, tzinfo=UTC),
+        "duration_seconds": 0.5,
+    }
+    base.update(overrides)
+    return ScanResult(**base)
+
+
+def test_region_status_scanned_with_no_findings_is_clean():
+    result = _result(regions=("ap-south-1", "us-east-1"))
+    assert result.region_status() == [("ap-south-1", "clean"), ("us-east-1", "clean")]
+
+
+def test_region_status_counts_findings_per_region():
+    result = _result(
+        findings=(_finding(region="ap-south-1"), _finding(region="ap-south-1")),
+        regions=("ap-south-1", "us-east-1"),
+    )
+    assert ("ap-south-1", "2 finding(s)") in result.region_status()
+    assert ("us-east-1", "clean") in result.region_status()
+
+
+def test_region_status_flags_a_failed_check():
+    result = _result(
+        errors=(CheckError("ebs-unattached", "ap-south-1", "AccessDenied", "x"),),
+        regions=("ap-south-1",),
+    )
+    assert result.region_status() == [("ap-south-1", "check failed")]
+
+
+def test_region_status_lists_skipped_regions_last():
+    result = _result(regions=("ap-south-1",), skipped_regions=("me-south-1",))
+    assert result.region_status() == [
+        ("ap-south-1", "clean"),
+        ("me-south-1", "skipped — not enabled for this account"),
+    ]

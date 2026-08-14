@@ -46,6 +46,10 @@ def result_to_dict(result: ScanResult, *, price_source: str | None = None) -> di
         "duration_seconds": result.duration_seconds,
         "account_id": result.account_id,
         "regions": list(result.regions),
+        "skipped_regions": list(result.skipped_regions),
+        "region_status": [
+            {"region": region, "status": status} for region, status in result.region_status()
+        ],
         "checks_run": list(result.checks_run),
         "summary": {
             "finding_count": len(findings),

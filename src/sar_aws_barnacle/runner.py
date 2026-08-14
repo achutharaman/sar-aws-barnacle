@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
 
@@ -60,6 +60,7 @@ def run_scan(
     prices: PriceBook,
     now: datetime | None = None,
     account_id: str | None = None,
+    on_progress: Callable[[int, int], None] | None = None,
 ) -> ScanResult:
     started = datetime.now(UTC)
     reference_time = now or started
@@ -68,7 +69,8 @@ def run_scan(
     findings: list[Finding] = []
     errors: list[CheckError] = []
     units = plan_units(checks, regions)
-    workers = max(1, min(config.max_workers, len(units) or 1))
+    total = len(units)
+    workers = max(1, min(config.max_workers, total or 1))
 
     with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="sar-aws-barnacle") as pool:
         futures = {
@@ -78,11 +80,13 @@ def run_scan(
             )
             for check, region in units
         }
-        for future in as_completed(futures):
+        for completed, future in enumerate(as_completed(futures), start=1):
             unit_findings, unit_error = future.result()
             findings.extend(unit_findings)
             if unit_error is not None:
                 errors.append(unit_error)
+            if on_progress is not None:
+                on_progress(completed, total)
 
     findings = _apply_filters(findings, config)
 
@@ -105,6 +109,11 @@ def _run_unit(
     prices: PriceBook,
     now: datetime,
 ) -> tuple[list[Finding], CheckError | None]:
+    # DEBUG, not INFO: with --all-regions and several checks, this fires
+    # dozens of times per second across threads. Its purpose is narrow --
+    # --verbose shows exactly which units are still in flight if one is
+    # slow, rather than a progress bar count that can't say which.
+    log.debug("starting check %s in %s", check_cls.id, region)
     ctx = ScanContext(
         region=region,
         check_id=check_cls.id,

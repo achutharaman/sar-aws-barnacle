@@ -27,6 +27,13 @@ $ sar-aws-barnacle scan --region ap-south-1
 
 sar-aws-barnacle scan · 1 region(s) · account 123456789012
 
+Regions
+┏━━━━━━━━━━━━┳━━━━━━━━━━━━━━┓
+┃ Region     ┃ Status       ┃
+┡━━━━━━━━━━━━╇━━━━━━━━━━━━━━┩
+│ ap-south-1 │ 2 finding(s) │
+└────────────┴──────────────┘
+
 ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Severity ┃ Check         ┃ Region     ┃ Resource              ┃ Monthly ┃ Detail                           ┃
 ┡━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
@@ -82,6 +89,8 @@ sar-aws-barnacle scan --no-live-pricing
 sar-aws-barnacle checks
 sar-aws-barnacle iam-policy
 ```
+
+Every report opens with a **Regions** table listing every region considered — scanned-and-clean regions included, not just ones with findings, so you can tell "checked, found nothing" apart from "never looked." A region passed to `-r` that isn't actually enabled for the account is skipped before the scan starts rather than attempted and left to fail, and shows up there as `skipped`. `--all-regions` already only ever considers enabled regions, so nothing is skipped there.
 
 ### Exit codes
 
@@ -178,6 +187,8 @@ Requires `jq`. Without it, fall back to `aws configure --profile sar-aws-barnacl
 sar-aws-barnacle scan --profile sar-aws-barnacle-scanner --region ap-south-1
 ```
 
+`--profile` is actually optional here: if a profile named `sar-aws-barnacle-scanner` exists in your AWS config, `sar-aws-barnacle scan` uses it automatically when you don't pass `--profile` at all. This is a fallback, not a requirement — it only ever applies when that exact profile is present, so it changes nothing for default credentials, an instance role, or CI OIDC.
+
 If this was a one-off audit, clean up afterwards — `aws iam delete-access-key` and `aws iam delete-user` (after detaching the policy). Read-only access has nothing to steal, but an unused access key is still a credential not worth leaving around.
 
 ## Configuration
@@ -203,7 +214,7 @@ Then edit the values you want to change — anything you leave out falls back to
 |---|---|---|---|---|---|
 | Regions | `regions` | `SAR_AWS_BARNACLE_REGIONS` (comma-separated) | `--region` / `-r` | none — falls back to your profile's default region | Which regions to scan |
 | All regions | `all_regions` | — | `--all-regions` | `false` | Scan every region enabled on the account; overrides `regions` |
-| Profile | `profile` | `SAR_AWS_BARNACLE_PROFILE` | `--profile` | none — default AWS credentials | Named AWS CLI profile to authenticate with |
+| Profile | `profile` | `SAR_AWS_BARNACLE_PROFILE` | `--profile` | `sar-aws-barnacle-scanner` if configured, else default AWS credentials | Named AWS CLI profile to authenticate with |
 | Output | `output` | `SAR_AWS_BARNACLE_OUTPUT` | `--output` / `-o` | `table` | `table` or `json` |
 | Fail on | `fail_on` | `SAR_AWS_BARNACLE_FAIL_ON` | `--fail-on` | `none` | Minimum severity that exits 1: `none`, `any`, `low`, `medium`, `high` |
 | Minimum savings | `min_monthly_savings` | — | `--min-savings` | `0` | Hide findings cheaper than this per month. Unpriced findings are always kept — see [Cost honesty](docs/DECISIONS.md) |
