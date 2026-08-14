@@ -302,20 +302,6 @@ Then run `python scripts/generate_iam_policy.py` so the published policy covers 
 **Considered and rejected for now**
 - *RDS reservation recommendations.* Not a hygiene check — it needs weeks of usage history and Cost Explorer's paid API, which does not fit a stateless single-pass scanner. See [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
-## Development
-
-```bash
-git clone https://github.com/achutharaman/sar-aws-barnacle
-cd sar-aws-barnacle
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
-
-pytest                  # all tests, fully offline (moto)
-ruff check . && ruff format --check .
-```
-
-No test in this repo touches a real AWS account. Credentials are stubbed in `conftest.py` and every AWS interaction is mocked with `moto`.
-
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). New checks are very welcome; the bar is a test that proves the detection logic and an honest cost confidence level.

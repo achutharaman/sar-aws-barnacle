@@ -243,6 +243,9 @@ question, not a clean bill of health.
 ## 10. Open questions
 
 - [ ] Verify seed prices against a live scan before first PyPI publish
+- [ ] Add `src/sar_aws_barnacle/py.typed` (PEP 561 marker) — `pyproject.toml`
+      already claims the `Typing :: Typed` classifier, but without this file
+      type checkers won't treat the installed package as typed
 - [ ] Demo GIF for the README (asciinema → gif)
 - [ ] Does `--fix` become a separate `sar-aws-barnacle fix` command with plan/apply, or a
       flag on `scan`? Leaning separate command
