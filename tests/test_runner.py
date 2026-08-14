@@ -11,11 +11,11 @@ from decimal import Decimal
 import pytest
 from botocore.exceptions import ClientError
 
-from aws_barnacle.config import Config
-from aws_barnacle.models import CostConfidence, Finding, Scope, Severity
-from aws_barnacle.pricing.base import NullPriceBook
-from aws_barnacle.runner import plan_units, run_scan
-from aws_barnacle.session import ClientFactory, ReadOnlyViolationError
+from sar_aws_barnacle.config import Config
+from sar_aws_barnacle.models import CostConfidence, Finding, Scope, Severity
+from sar_aws_barnacle.pricing.base import NullPriceBook
+from sar_aws_barnacle.runner import plan_units, run_scan
+from sar_aws_barnacle.session import ClientFactory, ReadOnlyViolationError
 
 NOW = datetime(2026, 8, 12, tzinfo=UTC)
 
@@ -160,6 +160,26 @@ def test_min_savings_filter_keeps_unpriced_findings():
 
     costs = {f.estimated_monthly_cost for f in result.findings}
     assert costs == {Decimal("50.00"), None}
+
+
+def test_on_progress_is_called_once_per_unit_and_reaches_total():
+    calls: list[tuple[int, int]] = []
+    result = run_scan(
+        [_make_check("a"), _make_check("b")],
+        ["ap-south-1", "us-east-1"],
+        factory=ClientFactory(),
+        config=Config(max_workers=2),
+        prices=NullPriceBook(),
+        now=NOW,
+        on_progress=lambda done, total: calls.append((done, total)),
+    )
+
+    # 2 checks x 2 regions = 4 units. Threaded completion order isn't
+    # guaranteed, so assert on the set of "done" counts reached, not order.
+    assert len(calls) == 4
+    assert {done for done, _total in calls} == {1, 2, 3, 4}
+    assert all(total == 4 for _done, total in calls)
+    assert len(result.findings) == 4
 
 
 def test_result_records_metadata():

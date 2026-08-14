@@ -27,6 +27,13 @@ $ sar-aws-barnacle scan --region ap-south-1
 
 sar-aws-barnacle scan · 1 region(s) · account 123456789012
 
+Regions
+┏━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Region     ┃ ebs-unattached ┃ ebs-unencrypted ┃
+┡━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ ap-south-1 │ 2 finding(s)   │ clean           │
+└────────────┴────────────────┴─────────────────┘
+
 ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Severity ┃ Check         ┃ Region     ┃ Resource              ┃ Monthly ┃ Detail                           ┃
 ┡━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
@@ -37,7 +44,7 @@ sar-aws-barnacle scan · 1 region(s) · account 123456789012
 └──────────┴───────────────┴────────────┴───────────────────────┴─────────┴──────────────────────────────────┘
 
 Estimated monthly waste: $100.32  ($1,203.84/year)
-2 finding(s) across 1 check(s) in 0.84s
+2 finding(s) across 2 check(s) in 0.84s
 Prices: AWS Pricing API (cached)
 ```
 
@@ -82,6 +89,8 @@ sar-aws-barnacle scan --no-live-pricing
 sar-aws-barnacle checks
 sar-aws-barnacle iam-policy
 ```
+
+Every report opens with a **Regions** table: one row per region, one column per check, so the whole scan's coverage reads as a single grid — scanned-and-clean included, not just cells with findings, so you can tell "checked, found nothing" apart from "never looked," per check. This is fully automatic: a new check appears as a new column the moment it's registered, with no changes anywhere else. A region passed to `-r` that isn't actually enabled for the account is skipped before the scan starts rather than attempted and left to fail — it's reported separately as `Skipped (not enabled for this account): ...` rather than as blank cells, since it was never scanned at all. `--all-regions` already only ever considers enabled regions, so nothing is skipped there.
 
 ### Exit codes
 
@@ -129,9 +138,102 @@ Add `pricing:GetProducts` if you want live pricing. Without it, sar-aws-barnacle
 
 If you would rather trust nothing: AWS's own `ReadOnlyAccess` managed policy is a superset of the above.
 
+## Set up read-only access
+
+The policy above is generated, not created — you still need to turn it into something `--profile` can point at. This only needs whatever access your own AWS credentials already have; sar-aws-barnacle itself never touches IAM.
+
+**1. Save the policy and create it**
+
+```bash
+sar-aws-barnacle iam-policy > sar-aws-barnacle-policy.json
+
+aws iam create-policy \
+  --policy-name sar-aws-barnacle-read-only-scan \
+  --policy-document file://sar-aws-barnacle-policy.json
+```
+
+**2. Attach it to a user or role**
+
+A dedicated IAM user with programmatic access is the simplest path for a laptop or a CI runner:
+
+```bash
+aws iam create-user --user-name sar-aws-barnacle-scanner
+aws iam attach-user-policy \
+  --user-name sar-aws-barnacle-scanner \
+  --policy-arn arn:aws:iam::<ACCOUNT_ID>:policy/sar-aws-barnacle-read-only-scan
+```
+
+Prefer a role instead if you're scanning from an EC2 instance, a CI job with OIDC, or assuming into other accounts — attach the same policy to the role and skip the rest of this section entirely.
+
+**3. Create the access key and wire it straight into a profile**
+
+Piping the key from `create-access-key` into `aws configure set` means the secret only ever lives in a shell variable, never a file on disk:
+
+```bash
+CREDS=$(aws iam create-access-key --user-name sar-aws-barnacle-scanner --output json)
+aws configure set aws_access_key_id "$(jq -r .AccessKey.AccessKeyId <<<"$CREDS")" \
+  --profile sar-aws-barnacle-scanner
+aws configure set aws_secret_access_key "$(jq -r .AccessKey.SecretAccessKey <<<"$CREDS")" \
+  --profile sar-aws-barnacle-scanner
+aws configure set region ap-south-1 --profile sar-aws-barnacle-scanner
+unset CREDS
+```
+
+Requires `jq`. Without it, fall back to `aws configure --profile sar-aws-barnacle-scanner` and paste the `AccessKeyId` / `SecretAccessKey` from the `create-access-key` output by hand.
+
+**4. Scan with it**
+
+```bash
+sar-aws-barnacle scan --profile sar-aws-barnacle-scanner --region ap-south-1
+```
+
+`--profile` is actually optional here: if a profile named `sar-aws-barnacle-scanner` exists in your AWS config, `sar-aws-barnacle scan` uses it automatically when you don't pass `--profile` at all. This is a fallback, not a requirement — it only ever applies when that exact profile is present, so it changes nothing for default credentials, an instance role, or CI OIDC.
+
+If this was a one-off audit, clean up afterwards — `aws iam delete-access-key` and `aws iam delete-user` (after detaching the policy). Read-only access has nothing to steal, but an unused access key is still a credential not worth leaving around.
+
 ## Configuration
 
 Optional `sar-aws-barnacle.toml`, discovered from the working directory upwards. Precedence, highest first: **CLI flags → `SAR_AWS_BARNACLE_*` env vars → config file → defaults**.
+
+### Create one
+
+```bash
+# Project-local: only applies when you run the CLI from this directory or below
+cp sar-aws-barnacle.toml.example sar-aws-barnacle.toml
+
+# Or a personal default: found no matter which directory you scan from, as
+# long as it's somewhere under your home directory (the leading dot is required)
+cp sar-aws-barnacle.toml.example ~/.sar-aws-barnacle.toml
+```
+
+Then edit the values you want to change — anything you leave out falls back to its default. `sar-aws-barnacle.toml.example` is a committed template only; the CLI never reads that file directly, so copying it is required, not optional decoration.
+
+### Top-level settings
+
+| Setting | TOML key | Env var | CLI flag | Default | What it does |
+|---|---|---|---|---|---|
+| Regions | `regions` | `SAR_AWS_BARNACLE_REGIONS` (comma-separated) | `--region` / `-r` | none — falls back to your profile's default region | Which regions to scan |
+| All regions | `all_regions` | — | `--all-regions` | `false` | Scan every region enabled on the account; overrides `regions` |
+| Profile | `profile` | `SAR_AWS_BARNACLE_PROFILE` | `--profile` | `sar-aws-barnacle-scanner` if configured, else default AWS credentials | Named AWS CLI profile to authenticate with |
+| Output | `output` | `SAR_AWS_BARNACLE_OUTPUT` | `--output` / `-o` | `table` | `table` or `json` |
+| Fail on | `fail_on` | `SAR_AWS_BARNACLE_FAIL_ON` | `--fail-on` | `none` | Minimum severity that exits 1: `none`, `any`, `low`, `medium`, `high` |
+| Minimum savings | `min_monthly_savings` | — | `--min-savings` | `0` | Hide findings cheaper than this per month. Unpriced findings are always kept — see [Cost honesty](docs/DECISIONS.md) |
+| Live pricing | `live_pricing` | `SAR_AWS_BARNACLE_LIVE_PRICING` | `--live-pricing` / `--no-live-pricing` | `true` | Query the AWS Pricing API (cached 30 days) vs. the bundled seed table only |
+| Max workers | `max_workers` | — | — | `8` | Parallel (check × region) units in the thread pool |
+| Checks to run | `checks_enabled` (array, top-level) | — | `--check` / `-c` | all registered checks | Restrict the scan to specific check ids |
+
+Two settings have no config-file or env var form at all, CLI flag only: `--refresh-prices` (bust the price cache) and the pricing cache directory itself, which follows the standard `XDG_CACHE_HOME` env var and defaults to `~/.cache/sar-aws-barnacle`.
+
+### Per-check tunables
+
+Each check can expose its own options in a `[sar-aws-barnacle.checks.<check-id>]` table — note this is a *different* key (`checks`, nested) from the top-level `checks_enabled` *array* above; one selects which checks run, the other tunes a check that's already running. Unknown keys are ignored, so a config written for an older version stays valid.
+
+For `ebs-unattached`:
+
+| Key | Default | What it does |
+|---|---|---|
+| `high_severity_usd` | `20` | Findings at or above this monthly cost are `HIGH` instead of `MEDIUM` |
+| `min_age_days` | `0` | Ignore volumes created more recently than this — useful to avoid flagging churn during an active migration |
 
 ```toml
 [sar-aws-barnacle]
@@ -165,13 +267,13 @@ Four decisions worth calling out:
 
 **Failures degrade the scan, they do not end it.** A missing `rds:DescribeDBSnapshots` permission costs you one check, not the whole report. Errors are collected, rendered, and reflected in exit code 2.
 
-**Adding a check touches only two files.** A check is a class with five class attributes and a `run(ctx)` generator. Drop it in `checks/`, add its test, done — no import list, no registry edit, no CLI change. Third-party packages can ship checks via the `aws_barnacle.checks` entry-point group.
+**Adding a check touches only two files.** A check is a class with five class attributes and a `run(ctx)` generator. Drop it in `checks/`, add its test, done — no import list, no registry edit, no CLI change. Third-party packages can ship checks via the `sar_aws_barnacle.checks` entry-point group.
 
 ### Adding a check
 
 ```python
-from aws_barnacle.registry import register
-from aws_barnacle.models import Finding, Scope, Severity
+from sar_aws_barnacle.registry import register
+from sar_aws_barnacle.models import Finding, Scope, Severity
 
 
 @register
@@ -196,6 +298,7 @@ Then run `python scripts/generate_iam_policy.py` so the published policy covers 
 **v0.1 — shipped**
 - [x] Core engine, registry, read-only guard, pricing, table + JSON output
 - [x] `ebs-unattached`
+- [x] `ebs-unencrypted` — security/hygiene, not cost-waste; see [`docs/DECISIONS.md`](docs/DECISIONS.md) §3
 
 **v0.2 — in progress**
 - [ ] `eip-unassociated` — unassociated Elastic IPs
@@ -211,23 +314,11 @@ Then run `python scripts/generate_iam_policy.py` so the published policy covers 
 **Considered and rejected for now**
 - *RDS reservation recommendations.* Not a hygiene check — it needs weeks of usage history and Cost Explorer's paid API, which does not fit a stateless single-pass scanner. See [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
-## Development
-
-```bash
-git clone https://github.com/achutharaman/sar-aws-barnacle
-cd sar-aws-barnacle
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
-
-pytest                  # all tests, fully offline (moto)
-ruff check . && ruff format --check .
-```
-
-No test in this repo touches a real AWS account. Credentials are stubbed in `conftest.py` and every AWS interaction is mocked with `moto`.
-
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). New checks are very welcome; the bar is a test that proves the detection logic and an honest cost confidence level.
+
+Found a security issue? See [SECURITY.md](SECURITY.md) — please don't open a public issue for it.
 
 ## License
 

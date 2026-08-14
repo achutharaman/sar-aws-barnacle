@@ -15,8 +15,8 @@ from __future__ import annotations
 import json
 from typing import Any, TextIO
 
-from aws_barnacle.config import Config
-from aws_barnacle.models import SCHEMA_VERSION, Finding, ScanResult
+from sar_aws_barnacle.config import Config
+from sar_aws_barnacle.models import SCHEMA_VERSION, Finding, ScanResult
 
 
 def finding_to_dict(finding: Finding) -> dict[str, Any]:
@@ -46,6 +46,11 @@ def result_to_dict(result: ScanResult, *, price_source: str | None = None) -> di
         "duration_seconds": result.duration_seconds,
         "account_id": result.account_id,
         "regions": list(result.regions),
+        "skipped_regions": list(result.skipped_regions),
+        "region_status": [
+            {"region": region, "check_id": check_id, "status": status}
+            for region, check_id, status in result.region_check_status()
+        ],
         "checks_run": list(result.checks_run),
         "summary": {
             "finding_count": len(findings),

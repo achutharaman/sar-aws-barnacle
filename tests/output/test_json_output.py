@@ -7,8 +7,8 @@ import json
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from aws_barnacle.config import Config, OutputFormat
-from aws_barnacle.models import (
+from sar_aws_barnacle.config import Config, OutputFormat
+from sar_aws_barnacle.models import (
     SCHEMA_VERSION,
     CheckError,
     CostConfidence,
@@ -16,8 +16,8 @@ from aws_barnacle.models import (
     ScanResult,
     Severity,
 )
-from aws_barnacle.output.base import get_renderer
-from aws_barnacle.output.json_output import JsonRenderer, result_to_dict
+from sar_aws_barnacle.output.base import get_renderer
+from sar_aws_barnacle.output.json_output import JsonRenderer, result_to_dict
 
 
 def _result(**overrides) -> ScanResult:
@@ -114,3 +114,25 @@ def test_result_to_dict_is_json_serialisable():
 def test_renderer_factory_returns_json_renderer():
     assert get_renderer(OutputFormat.JSON).name == "json"
     assert get_renderer(OutputFormat.TABLE).name == "table"
+
+
+def test_region_status_and_skipped_regions_are_reported():
+    result = _result(regions=("ap-south-1", "eu-north-1"), skipped_regions=("me-south-1",))
+    payload = _render(result)
+
+    assert payload["skipped_regions"] == ["me-south-1"]
+    assert {
+        "region": "me-south-1",
+        "check_id": None,
+        "status": "skipped — not enabled for this account",
+    } in payload["region_status"]
+    assert {
+        "region": "ap-south-1",
+        "check_id": "ebs-unattached",
+        "status": "1 finding(s)",
+    } in payload["region_status"]
+    assert {
+        "region": "eu-north-1",
+        "check_id": "ebs-unattached",
+        "status": "1 finding(s)",
+    } in payload["region_status"]

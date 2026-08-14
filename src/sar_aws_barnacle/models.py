@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
+from types import MappingProxyType
 
 SCHEMA_VERSION = "1.0"
 GLOBAL_REGION = "global"
@@ -29,10 +30,17 @@ class Severity(StrEnum):
     def rank(self) -> int:
         return _SEVERITY_RANK[self]
 
+    # StrEnum inherits str's __lt__/__le__/__gt__/__ge__, which compare
+    # members alphabetically ("high" < "low") rather than by severity. Rather
+    # than override just __lt__ (which would make the four operators disagree
+    # with each other -- a worse trap than today's alphabetical-everywhere
+    # behaviour), comparison is disabled outright: .rank is the one ordering
+    # mechanism, and misuse fails loudly instead of returning a plausible but
+    # wrong bool.
     def __lt__(self, other: object) -> bool:
-        if not isinstance(other, Severity):
-            return NotImplemented
-        return self.rank < other.rank
+        return NotImplemented
+
+    __le__ = __gt__ = __ge__ = __lt__
 
 
 _SEVERITY_RANK: dict[Severity, int] = {
@@ -105,6 +113,12 @@ class Finding:
                 f"confidence level; say how much to trust it"
             )
 
+        # frozen=True only blocks rebinding self.metadata, not mutating the dict
+        # it points to. A read-only copy closes that gap so the runner's
+        # lock-free fan-out (see the module docstring) can trust findings are
+        # actually immutable once yielded.
+        object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))
+
     @property
     def sort_key(self) -> tuple[int, Decimal, str]:
         """Highest severity first, then biggest savings, then stable by id."""
@@ -138,6 +152,17 @@ class ScanResult:
     started_at: datetime
     duration_seconds: float
     account_id: str | None = None
+    # Regions the caller asked for (explicit -r, or a stale --all-regions
+    # candidate) that were excluded before the scan started because they
+    # are not enabled for this account. Skipped, not scanned -- no
+    # CheckError, no wasted timeout+retry.
+    skipped_regions: tuple[str, ...] = ()
+    # Which of checks_run are Scope.GLOBAL. region_check_status() needs this
+    # to know a global check reports exactly once against the synthetic
+    # "global" region rather than once per real region -- a heuristic based
+    # on where its findings landed can't tell "global, zero findings" apart
+    # from "regional, never checked here".
+    global_checks: frozenset[str] = field(default_factory=frozenset)
 
     @property
     def estimated_monthly_savings(self) -> Decimal:
@@ -158,3 +183,42 @@ class ScanResult:
 
     def sorted_findings(self) -> list[Finding]:
         return sorted(self.findings, key=lambda f: f.sort_key)
+
+    def region_check_status(self) -> list[tuple[str, str | None, str]]:
+        """(region, check_id, status) for every region x check combination
+        considered -- scanned-and-clean included, not just the ones that
+        happened to have findings -- so a report always accounts for
+        everything it looked at, per check, not just an aggregate count.
+
+        Derived entirely from checks_run, regions, findings, and errors: a
+        new check needs zero changes here, or in either renderer, to show
+        up in this breakdown -- the same "adding a check touches two files"
+        guarantee this project makes for checks themselves extends to this
+        report. See docs/DECISIONS.md §4.
+        """
+        finding_counts: dict[tuple[str, str], int] = {}
+        for f in self.findings:
+            key = (f.region, f.check_id)
+            finding_counts[key] = finding_counts.get(key, 0) + 1
+        errored: set[tuple[str, str]] = {(e.region, e.check_id) for e in self.errors}
+
+        def status_for(region: str, check_id: str) -> str:
+            count = finding_counts.get((region, check_id), 0)
+            if (region, check_id) in errored:
+                return f"{count} finding(s), check failed" if count else "check failed"
+            return f"{count} finding(s)" if count else "clean"
+
+        regional_checks = [c for c in self.checks_run if c not in self.global_checks]
+        global_checks_run = [c for c in self.checks_run if c in self.global_checks]
+
+        lines = []
+        for region in self.regions:
+            for check_id in regional_checks:
+                lines.append((region, check_id, status_for(region, check_id)))
+        # Reported once, not once per real region -- a global check runs
+        # exactly once regardless of how many regions were scanned.
+        for check_id in global_checks_run:
+            lines.append((GLOBAL_REGION, check_id, status_for(GLOBAL_REGION, check_id)))
+        for region in self.skipped_regions:
+            lines.append((region, None, "skipped — not enabled for this account"))
+        return lines

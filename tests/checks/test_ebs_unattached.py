@@ -14,9 +14,9 @@ import boto3
 import pytest
 from moto import mock_aws
 
-from aws_barnacle.checks.ebs_unattached import UnattachedEbsVolumes
-from aws_barnacle.config import Config
-from aws_barnacle.models import CostConfidence, Scope, Severity
+from sar_aws_barnacle.checks.ebs_unattached import UnattachedEbsVolumes
+from sar_aws_barnacle.config import Config
+from sar_aws_barnacle.models import CostConfidence, Scope, Severity
 
 REGION = "ap-south-1"
 AZ = "ap-south-1a"

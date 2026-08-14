@@ -41,25 +41,23 @@ Homepage = "https://github.com/achutharaman/sar-aws-barnacle"
 Issues = "https://github.com/achutharaman/sar-aws-barnacle/issues"
 Changelog = "https://github.com/achutharaman/sar-aws-barnacle/blob/main/CHANGELOG.md"
 
-# One console script. The sar-aws-* prefix is a portfolio-wide naming
-# convention, so the command name matches the PyPI distribution exactly.
 [project.scripts]
-sar-aws-barnacle = "aws_barnacle.cli:app"
+sar-aws-barnacle = "sar_aws_barnacle.cli:app"
 
 # Extension seam: third-party packages can ship checks by advertising this
 # entry-point group. Nothing in this repo needs to change for them to load.
-[project.entry-points."aws_barnacle.checks"]
+[project.entry-points."sar_aws_barnacle.checks"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/aws_barnacle"]
+packages = ["src/sar_aws_barnacle"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q --strict-markers"
-filterwarnings = ["error::DeprecationWarning:aws_barnacle.*"]
+filterwarnings = ["error::DeprecationWarning:sar_aws_barnacle.*"]
 
 [tool.coverage.run]
-source = ["aws_barnacle"]
+source = ["sar_aws_barnacle"]
 branch = true
 
 [tool.coverage.report]

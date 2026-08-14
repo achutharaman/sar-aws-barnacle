@@ -23,11 +23,11 @@ credentials, something has gone wrong in the design.
 
 Two files. Nothing in core changes.
 
-**1. `src/aws_barnacle/checks/your_check.py`**
+**1. `src/sar_aws_barnacle/checks/your_check.py`**
 
 ```python
-from aws_barnacle.models import CostConfidence, Finding, Scope, Severity
-from aws_barnacle.registry import register
+from sar_aws_barnacle.models import CostConfidence, Finding, Scope, Severity
+from sar_aws_barnacle.registry import register
 
 
 @register
