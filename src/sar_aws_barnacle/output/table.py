@@ -60,6 +60,13 @@ class TableRenderer:
         console.print()
 
         console.print(self._regions_table(result))
+        if result.skipped_regions:
+            console.print(
+                Text(
+                    f"Skipped (not enabled for this account): {', '.join(result.skipped_regions)}",
+                    style="dim",
+                )
+            )
         console.print()
 
         if not findings:
@@ -187,23 +194,43 @@ class TableRenderer:
             )
 
     def _regions_table(self, result: ScanResult) -> Table:
-        """Every region considered gets a row -- scanned-and-clean regions
-        included, not just the ones with findings -- so a reader can tell
-        "checked, found nothing" apart from "never looked"."""
+        """One row per region, one column per check, so the whole scan's
+        coverage reads as a single grid -- scanned-and-clean included, not
+        just combinations with findings, so a reader can tell "checked,
+        found nothing" apart from "never looked", per check. New checks
+        show up here automatically as a new column; see
+        ScanResult.region_check_status(). Skipped regions were never
+        scanned, so they don't fit a per-check grid -- they're reported as
+        a note instead, not blank cells here.
+        """
+        lines = [(r, c, s) for r, c, s in result.region_check_status() if c is not None]
+        check_ids = list(dict.fromkeys(check_id for _, check_id, _ in lines))
+        regions_shown = list(dict.fromkeys(region for region, _, _ in lines))
+        status_by = {(region, check_id): status for region, check_id, status in lines}
+
         table = Table(title="Regions", header_style="bold", title_justify="left")
         table.add_column("Region", no_wrap=True)
-        table.add_column("Status")
-        for region, status in result.region_status():
-            if status.startswith("skipped"):
-                style = "dim"
-            elif "failed" in status:
-                style = "yellow"
-            elif status == "clean":
-                style = "green"
-            else:
-                style = None
-            table.add_row(region, Text(status, style=style) if style else Text(status))
+        for check_id in check_ids:
+            table.add_column(check_id, no_wrap=True)
+
+        for region in regions_shown:
+            row = [region]
+            for check_id in check_ids:
+                # A global check only ever produces a "global" row, never a
+                # per-region one (and vice versa for regional checks) -- the
+                # combination genuinely doesn't apply, not an unknown status.
+                status = status_by.get((region, check_id))
+                row.append(self._status_text(status) if status else Text("—", style="dim"))
+            table.add_row(*row)
         return table
+
+    @staticmethod
+    def _status_text(status: str) -> Text:
+        if "failed" in status:
+            return Text(status, style="yellow")
+        if status == "clean":
+            return Text(status, style="green")
+        return Text(status)
 
     def _errors_table(self, result: ScanResult) -> Table:
         table = Table(title="Errors", header_style="bold yellow", title_justify="left")

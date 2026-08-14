@@ -48,7 +48,8 @@ def result_to_dict(result: ScanResult, *, price_source: str | None = None) -> di
         "regions": list(result.regions),
         "skipped_regions": list(result.skipped_regions),
         "region_status": [
-            {"region": region, "status": status} for region, status in result.region_status()
+            {"region": region, "check_id": check_id, "status": status}
+            for region, check_id, status in result.region_check_status()
         ],
         "checks_run": list(result.checks_run),
         "summary": {

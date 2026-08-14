@@ -157,6 +157,12 @@ class ScanResult:
     # are not enabled for this account. Skipped, not scanned -- no
     # CheckError, no wasted timeout+retry.
     skipped_regions: tuple[str, ...] = ()
+    # Which of checks_run are Scope.GLOBAL. region_check_status() needs this
+    # to know a global check reports exactly once against the synthetic
+    # "global" region rather than once per real region -- a heuristic based
+    # on where its findings landed can't tell "global, zero findings" apart
+    # from "regional, never checked here".
+    global_checks: frozenset[str] = field(default_factory=frozenset)
 
     @property
     def estimated_monthly_savings(self) -> Decimal:
@@ -178,23 +184,41 @@ class ScanResult:
     def sorted_findings(self) -> list[Finding]:
         return sorted(self.findings, key=lambda f: f.sort_key)
 
-    def region_status(self) -> list[tuple[str, str]]:
-        """(region, status) for every region considered -- scanned or
-        skipped -- so a report always accounts for every region asked for,
-        not just the ones that happened to have findings."""
-        finding_counts: dict[str, int] = {}
+    def region_check_status(self) -> list[tuple[str, str | None, str]]:
+        """(region, check_id, status) for every region x check combination
+        considered -- scanned-and-clean included, not just the ones that
+        happened to have findings -- so a report always accounts for
+        everything it looked at, per check, not just an aggregate count.
+
+        Derived entirely from checks_run, regions, findings, and errors: a
+        new check needs zero changes here, or in either renderer, to show
+        up in this breakdown -- the same "adding a check touches two files"
+        guarantee this project makes for checks themselves extends to this
+        report. See docs/DECISIONS.md §4.
+        """
+        finding_counts: dict[tuple[str, str], int] = {}
         for f in self.findings:
-            finding_counts[f.region] = finding_counts.get(f.region, 0) + 1
-        errored_regions = {e.region for e in self.errors}
+            key = (f.region, f.check_id)
+            finding_counts[key] = finding_counts.get(key, 0) + 1
+        errored: set[tuple[str, str]] = {(e.region, e.check_id) for e in self.errors}
+
+        def status_for(region: str, check_id: str) -> str:
+            count = finding_counts.get((region, check_id), 0)
+            if (region, check_id) in errored:
+                return f"{count} finding(s), check failed" if count else "check failed"
+            return f"{count} finding(s)" if count else "clean"
+
+        regional_checks = [c for c in self.checks_run if c not in self.global_checks]
+        global_checks_run = [c for c in self.checks_run if c in self.global_checks]
 
         lines = []
         for region in self.regions:
-            count = finding_counts.get(region, 0)
-            if region in errored_regions:
-                status = f"{count} finding(s), check failed" if count else "check failed"
-            else:
-                status = f"{count} finding(s)" if count else "clean"
-            lines.append((region, status))
+            for check_id in regional_checks:
+                lines.append((region, check_id, status_for(region, check_id)))
+        # Reported once, not once per real region -- a global check runs
+        # exactly once regardless of how many regions were scanned.
+        for check_id in global_checks_run:
+            lines.append((GLOBAL_REGION, check_id, status_for(GLOBAL_REGION, check_id)))
         for region in self.skipped_regions:
-            lines.append((region, "skipped — not enabled for this account"))
+            lines.append((region, None, "skipped — not enabled for this account"))
         return lines

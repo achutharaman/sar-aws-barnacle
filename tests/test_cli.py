@@ -84,7 +84,7 @@ def test_scan_reports_findings(waste):
 
 
 def test_scan_json_output_is_parseable(waste):
-    result = _scan("--output", "json")
+    result = _scan("--check", "ebs-unattached", "--output", "json")
     payload = json.loads(result.output)
     assert payload["schema_version"] == "1.0"
     assert payload["summary"]["finding_count"] == 2
@@ -102,7 +102,7 @@ def test_fail_on_none_never_trips(waste):
 
 
 def test_min_savings_filters_output(waste):
-    result = _scan("--min-savings", "50", "--output", "json")
+    result = _scan("--check", "ebs-unattached", "--min-savings", "50", "--output", "json")
     payload = json.loads(result.output)
     assert payload["summary"]["finding_count"] == 1
     assert payload["findings"][0]["estimated_monthly_cost"] == "91.20"
@@ -199,9 +199,11 @@ def test_scan_reports_skipped_regions_in_json(waste, monkeypatch):
 
     assert payload["regions"] == [REGION]
     assert payload["skipped_regions"] == ["me-south-1"]
-    assert {"region": "me-south-1", "status": "skipped — not enabled for this account"} in (
-        payload["region_status"]
-    )
+    assert {
+        "region": "me-south-1",
+        "check_id": None,
+        "status": "skipped — not enabled for this account",
+    } in payload["region_status"]
 
 
 def test_multiple_regions_are_scanned(waste):

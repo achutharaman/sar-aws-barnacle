@@ -102,4 +102,21 @@ def test_clean_region_is_shown_as_clean_not_omitted():
 def test_skipped_region_is_shown_as_skipped():
     output = _render(regions=("ap-south-1",), skipped_regions=("me-south-1",))
     assert "me-south-1" in output
-    assert "skipped" in output
+    assert "Skipped" in output
+
+
+def test_regions_table_is_a_region_by_check_grid():
+    """One row per region, one column per check -- not a long list of
+    (region, check) pairs -- so multi-check coverage reads as a single grid."""
+    findings = [_finding(check_id="ebs-unattached", region="ap-south-1")]
+    output = _render(
+        findings,
+        regions=("ap-south-1", "us-east-1"),
+        checks_run=("ebs-unattached", "ebs-unencrypted"),
+    )
+    regions_section = output.split("Regions", 1)[1].split("\n\n", 1)[0]
+    assert "ebs-unattached" in regions_section
+    assert "ebs-unencrypted" in regions_section
+    # us-east-1 appears exactly once (one row), with both checks' statuses
+    # alongside it, not once per check.
+    assert output.count("us-east-1") == 1
