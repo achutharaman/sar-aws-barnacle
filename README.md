@@ -318,6 +318,8 @@ Then run `python scripts/generate_iam_policy.py` so the published policy covers 
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). New checks are very welcome; the bar is a test that proves the detection logic and an honest cost confidence level.
 
+Found a security issue? See [SECURITY.md](SECURITY.md) — please don't open a public issue for it.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
