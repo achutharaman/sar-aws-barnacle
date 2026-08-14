@@ -41,8 +41,6 @@ Homepage = "https://github.com/achutharaman/sar-aws-barnacle"
 Issues = "https://github.com/achutharaman/sar-aws-barnacle/issues"
 Changelog = "https://github.com/achutharaman/sar-aws-barnacle/blob/main/CHANGELOG.md"
 
-# One console script. The sar-aws-* prefix is a portfolio-wide naming
-# convention, so the command name matches the PyPI distribution exactly.
 [project.scripts]
 sar-aws-barnacle = "sar_aws_barnacle.cli:app"
 

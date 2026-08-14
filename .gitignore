@@ -25,6 +25,11 @@ htmlcov/
 # sar-aws-barnacle
 *.json
 !src/sar_aws_barnacle/pricing/data/prices.seed.json
+*.docx
+
+# Local project/tooling config, not for the public repo
+CLAUDE.md
+.claude/
 
 # NEVER commit these
 .env
