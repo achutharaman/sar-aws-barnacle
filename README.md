@@ -228,12 +228,15 @@ Two settings have no config-file or env var form at all, CLI flag only: `--refre
 
 Each check can expose its own options in a `[sar-aws-barnacle.checks.<check-id>]` table — note this is a *different* key (`checks`, nested) from the top-level `checks_enabled` *array* above; one selects which checks run, the other tunes a check that's already running. Unknown keys are ignored, so a config written for an older version stays valid.
 
-For `ebs-unattached`:
+| Check | Key | Default | What it does |
+|---|---|---|---|
+| `ebs-unattached` | `high_severity_usd` | `20` | Findings at or above this monthly cost are `HIGH` instead of `MEDIUM` |
+| `ebs-unattached` | `min_age_days` | `0` | Ignore volumes created more recently than this — useful to avoid flagging churn during an active migration |
+| `eip-unassociated` | `high_severity_usd` | `20` | Findings at or above this monthly cost are `HIGH`. Idle-EIP pricing is flat (~$3.65/month), so this rarely fires unless lowered — severity is effectively always `MEDIUM` out of the box |
+| `ebs-snapshot-age`, `rds-snapshot-age`, `iam-stale-keys` | `min_age_days` | `90` | Ignore anything younger than this |
+| `ebs-snapshot-age`, `rds-snapshot-age`, `iam-stale-keys` | `high_severity_days` | `365` | Findings at or beyond this age are `HIGH` instead of `MEDIUM` |
 
-| Key | Default | What it does |
-|---|---|---|
-| `high_severity_usd` | `20` | Findings at or above this monthly cost are `HIGH` instead of `MEDIUM` |
-| `min_age_days` | `0` | Ignore volumes created more recently than this — useful to avoid flagging churn during an active migration |
+`ec2-stopped` and `ebs-unencrypted` have no tunables — `ec2-stopped`'s `LOW`/`HIGH` split is a fixed 24-hour threshold (see [`docs/DECISIONS.md`](docs/DECISIONS.md) §3), and `ebs-unencrypted`'s severity depends only on whether the volume is attached.
 
 ```toml
 [sar-aws-barnacle]
@@ -277,34 +280,36 @@ from sar_aws_barnacle.models import Finding, Scope, Severity
 
 
 @register
-class UnassociatedElasticIps:
-    id = "eip-unassociated"
-    title = "Unassociated Elastic IPs"
+class IdleEc2Instances:
+    id = "ec2-low-cpu"
+    title = "Idle running EC2 instances"
     service = "ec2"
     scope = Scope.REGIONAL
-    required_actions = frozenset({"ec2:DescribeAddresses"})
+    required_actions = frozenset({"ec2:DescribeInstances", "cloudwatch:GetMetricStatistics"})
 
     def run(self, ctx):
-        for address in ctx.client().describe_addresses()["Addresses"]:
-            if address.get("AssociationId"):
-                continue
-            yield Finding(...)
+        for reservation in ctx.client().describe_instances()["Reservations"]:
+            for instance in reservation["Instances"]:
+                # ctx.client("cloudwatch") for a service other than this
+                # check's own -- ctx.client() always accepts an override.
+                yield Finding(...)
 ```
+
+This one's illustrative only — the real `ec2-low-cpu` needs more than a CPU threshold to avoid false-positiving on memory- or IO-bound instances; see [`docs/DECISIONS.md`](docs/DECISIONS.md) §3 for why it's deferred rather than built yet.
 
 Then run `python scripts/generate_iam_policy.py` so the published policy covers the new permission.
 
 ## Roadmap
 
-**v0.1 — shipped**
+**v0.1 — shipped, all six planned checks done**
 - [x] Core engine, registry, read-only guard, pricing, table + JSON output
 - [x] `ebs-unattached`
 - [x] `ebs-unencrypted` — security/hygiene, not cost-waste; see [`docs/DECISIONS.md`](docs/DECISIONS.md) §3
-
-**v0.2 — in progress**
-- [ ] `eip-unassociated` — unassociated Elastic IPs
-- [ ] `ec2-stopped` — instances stopped longer than N days
-- [ ] `ebs-snapshot-age` / `rds-snapshot-age` — ageing snapshots
-- [ ] `iam-stale-keys` — old and never-used access keys
+- [x] `eip-unassociated` — unassociated Elastic IPs
+- [x] `ec2-stopped` — long-stopped instances; cost is attached storage, age is best-effort; see [`docs/DECISIONS.md`](docs/DECISIONS.md) §3
+- [x] `ebs-snapshot-age` — ageing snapshots; cost is an upper bound (see [`docs/DECISIONS.md`](docs/DECISIONS.md) §5)
+- [x] `rds-snapshot-age` — same shape, manual snapshots only
+- [x] `iam-stale-keys` — old and never-used access keys; security/hygiene, first `Scope.GLOBAL` check; see [`docs/DECISIONS.md`](docs/DECISIONS.md) §3
 
 **v0.3 — designed, not started**
 - [ ] `ec2-low-cpu` — idle running instances via CloudWatch

@@ -18,7 +18,8 @@
         "standard": "0.050"
       },
       "ebs-snapshot-gb-month": { "default": "0.050" },
-      "eip-idle-hour": { "default": "0.005" }
+      "eip-idle-hour": { "default": "0.005" },
+      "rds-snapshot-gb-month": { "default": "0.095" }
     },
     "us-west-2": {
       "ebs-gb-month": {
@@ -31,7 +32,8 @@
         "standard": "0.050"
       },
       "ebs-snapshot-gb-month": { "default": "0.050" },
-      "eip-idle-hour": { "default": "0.005" }
+      "eip-idle-hour": { "default": "0.005" },
+      "rds-snapshot-gb-month": { "default": "0.095" }
     },
     "eu-west-1": {
       "ebs-gb-month": {
@@ -44,7 +46,8 @@
         "standard": "0.055"
       },
       "ebs-snapshot-gb-month": { "default": "0.053" },
-      "eip-idle-hour": { "default": "0.005" }
+      "eip-idle-hour": { "default": "0.005" },
+      "rds-snapshot-gb-month": { "default": "0.101" }
     },
     "eu-central-1": {
       "ebs-gb-month": {
@@ -57,7 +60,8 @@
         "standard": "0.059"
       },
       "ebs-snapshot-gb-month": { "default": "0.054" },
-      "eip-idle-hour": { "default": "0.005" }
+      "eip-idle-hour": { "default": "0.005" },
+      "rds-snapshot-gb-month": { "default": "0.103" }
     },
     "ap-south-1": {
       "ebs-gb-month": {
@@ -70,7 +74,8 @@
         "standard": "0.0950"
       },
       "ebs-snapshot-gb-month": { "default": "0.0500" },
-      "eip-idle-hour": { "default": "0.005" }
+      "eip-idle-hour": { "default": "0.005" },
+      "rds-snapshot-gb-month": { "default": "0.0950" }
     },
     "ap-southeast-1": {
       "ebs-gb-month": {
@@ -83,7 +88,8 @@
         "standard": "0.060"
       },
       "ebs-snapshot-gb-month": { "default": "0.050" },
-      "eip-idle-hour": { "default": "0.005" }
+      "eip-idle-hour": { "default": "0.005" },
+      "rds-snapshot-gb-month": { "default": "0.103" }
     }
   }
 }
