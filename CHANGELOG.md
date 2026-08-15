@@ -18,6 +18,15 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   rather than a confirmed-idle one — see `docs/DECISIONS.md` §3) and
   `snapshot-orphaned` (EBS snapshots whose source volume no longer exists,
   with AMI-backed snapshots excluded entirely).
+- Three Tier-2 checks pulled forward from `docs/CHECK-BACKLOG.md`:
+  `ami-orphaned-snapshots` (snapshots left behind by a deregistered AMI,
+  deduplicated against `snapshot-orphaned`), `nat-gw-idle` (NAT Gateways
+  with no running EC2 instances in their VPC — a heuristic, worded as one,
+  fixed `HIGH` severity), and `kms-unused-keys` (customer-managed KMS key
+  inventory, flat `$1.00`/month `EXACT` cost, framed as an inventory
+  finding rather than an idleness claim). See `docs/DECISIONS.md` §3 for
+  the reasoning behind each, including the verified KMS disabled-key
+  billing behavior.
 - Live progress bar during `scan` (stderr only; skipped automatically for
   piped or non-interactive output).
 - Per-region, per-check status breakdown in both the table and JSON

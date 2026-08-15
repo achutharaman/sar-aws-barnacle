@@ -4,7 +4,7 @@ Triaged candidates for future checks, so scope decisions get recorded once
 instead of re-derived every time someone asks "what should we build next?"
 Placement in a tier is not a schedule commitment.
 
-See [`docs/DECISIONS.md`](DECISIONS.md) §3 for the eight checks already
+See [`docs/DECISIONS.md`](DECISIONS.md) §3 for the twelve checks already
 shipped, §4 for the check contract every candidate below would need to
 satisfy, and §5 for the cost-confidence rules the "Cost confidence" column
 maps onto. This document only covers what's not built yet.
@@ -14,10 +14,10 @@ maps onto. This document only covers what's not built yet.
 ## Tier 1 — high dollar value, pure describe calls, exactly priceable
 
 No new plumbing needed. Each of these fits the existing two-file check
-contract the same way the six shipped checks do — a paginated
-Describe/List call, a priced dimension already knowable from the response,
-and no cross-service lookup beyond what a couple of already-baseline
-actions provide.
+contract the same way the shipped checks do — a paginated Describe/List
+call, a priced dimension already knowable from the response, and no
+cross-service lookup beyond what a couple of already-baseline actions
+provide.
 
 | Check id | What it finds | AWS API | Cost confidence | Notes |
 |---|---|---|---|---|
@@ -40,9 +40,6 @@ is.
 
 | Check id | What it finds | AWS API | Cost confidence | Notes |
 |---|---|---|---|---|
-| `ami-orphaned-snapshots` | Snapshots left behind by a deregistered AMI | `ec2:DescribeSnapshots`, `DescribeImages` | UPPER_BOUND | Deregistering an AMI does not delete its backing snapshots — needs cross-referencing against the current AMI list. |
-| `nat-gw-idle` | NAT Gateway in a VPC with no running instances | `ec2:DescribeNatGateways`, `DescribeInstances` | LOWER_BOUND | ~$32/month base plus per-GB data processing; the latter isn't visible from Describe calls. |
-| `kms-unused-keys` | Customer-managed KMS keys with no recent usage | `kms:ListKeys`, `DescribeKey` + a usage signal (TBD) | EXACT (per-key) | $1/month each, but IaC modules commonly provision one key per resource, so accounts accumulate hundreds. No native "last used" API, unlike `iam-stale-keys`'s `GetAccessKeyLastUsed` — needs a usage proxy. |
 | `s3-incomplete-multipart` | Incomplete multipart uploads | `s3:ListMultipartUploads` (per bucket) | EXACT | Bills storage forever and is invisible in the console UI. |
 | `s3-no-lifecycle` | Buckets with no transition or expiration rules | `s3:ListBuckets`, `GetBucketLifecycleConfiguration` | N/A — hygiene | A configuration gap, not a priced resource. Same shape as `ebs-unencrypted`: real signal, no dollar figure to honestly attach. |
 | `ecr-no-lifecycle` | ECR repositories with no lifecycle policy | `ecr:DescribeRepositories`, `GetLifecyclePolicy` | N/A — hygiene | Same shape as `s3-no-lifecycle`; repos grow unbounded without one. |
@@ -51,6 +48,12 @@ is.
 | `redshift-idle` | Clusters with no apparent usage | `redshift:DescribeClusters` + a usage signal (TBD) | LOWER_BOUND | Same shape as `elasticache-idle`. |
 | `backup-stale-recovery-points` | AWS Backup vaults holding very old recovery points | `backup:ListRecoveryPointsByBackupVault` | UPPER_BOUND | Same age/cost-honesty shape as `ebs-snapshot-age` / `rds-snapshot-age`, different service. |
 | `elb-classic` | Classic Load Balancers still running | `elasticloadbalancing:DescribeLoadBalancers` (classic API) | EXACT (base) | Deprecated account-wide, but existing ones keep billing indefinitely until migrated off. |
+
+`ami-orphaned-snapshots`, `nat-gw-idle`, and `kms-unused-keys` were also
+Tier 2 candidates and have since shipped — see `docs/DECISIONS.md` §3.
+`kms-unused-keys` shipped as a key-inventory cost finding (flat EXACT
+$1/key/month) rather than the usage-signal-gated version originally
+sketched here — see the note in `docs/DECISIONS.md` §3 for why.
 
 ---
 
@@ -71,7 +74,7 @@ formalizes that blocker across all five candidates that share it.
 | `ec2-low-cpu` | Idle running instances | `cloudwatch:GetMetricStatistics` (CPUUtilization) + `ec2:DescribeInstances` | EXACT (instance-hour) | Most false-positive-prone check in this whole document — a low-CPU box may be memory- or IO-bound, not idle. |
 | `lambda-never-invoked` | Functions with zero invocations in the lookback window | `cloudwatch:GetMetricStatistics` (Invocations) + `lambda:ListFunctions` | N/A — hygiene | Lambda bills per invocation, so zero invocations means zero cost, not hidden waste. Signal is dead code, not money. |
 | `dynamodb-overprovisioned` | Provisioned-capacity tables far above actual consumption | `cloudwatch:GetMetricStatistics` (Consumed{Read,Write}CapacityUnits) + `dynamodb:ListTables`, `DescribeTable` | LOWER_BOUND | Only meaningful for provisioned-capacity tables — needs a billing-mode check first, on-demand tables don't apply. |
-| `nat-gw-no-traffic` | NAT Gateway with negligible bytes processed | `cloudwatch:GetMetricStatistics` (BytesOutToDestination) + `ec2:DescribeNatGateways` | LOWER_BOUND | Distinct from Tier 2's `nat-gw-idle`: catches a gateway with instances present but not actually using it, which the Tier 2 version can't see. |
+| `nat-gw-no-traffic` | NAT Gateway with negligible bytes processed | `cloudwatch:GetMetricStatistics` (BytesOutToDestination) + `ec2:DescribeNatGateways` | LOWER_BOUND | Distinct from the shipped `nat-gw-idle`: catches a gateway with instances present but not actually using it, which `nat-gw-idle`'s no-running-instances heuristic can't see. |
 | `rds-no-connections` | RDS instances with no client connections | `cloudwatch:GetMetricStatistics` (DatabaseConnections) + `rds:DescribeDBInstances` | EXACT (instance-hour) | Catches a running-but-unused instance that Tier 1's `rds-stopped` can't — that one only sees instances already stopped. |
 
 ---
@@ -101,6 +104,6 @@ not as a check in this registry.
 
 ## See also
 
-- [`docs/DECISIONS.md`](DECISIONS.md) §3 — the six shipped checks and the full reasoning behind each.
+- [`docs/DECISIONS.md`](DECISIONS.md) §3 — the twelve shipped checks and the full reasoning behind each.
 - [`docs/DECISIONS.md`](DECISIONS.md) §4 — the check contract (five class attributes, `run(ctx)`, two files touched, automatic `region_check_status()` reporting).
 - [`docs/DECISIONS.md`](DECISIONS.md) §5 — cost-honesty rules: what `EXACT` / `LOWER_BOUND` / `UPPER_BOUND` / `UNKNOWN` each commit to.

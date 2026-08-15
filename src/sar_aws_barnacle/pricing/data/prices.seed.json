@@ -20,7 +20,9 @@
       "ebs-snapshot-gb-month": { "default": "0.050" },
       "eip-idle-hour": { "default": "0.005" },
       "rds-snapshot-gb-month": { "default": "0.095" },
-      "vpc-endpoint-hour": { "default": "0.01" }
+      "vpc-endpoint-hour": { "default": "0.01" },
+      "nat-gateway-hour": { "default": "0.045" },
+      "kms-key-month": { "default": "1.00" }
     },
     "us-west-2": {
       "ebs-gb-month": {
@@ -35,7 +37,9 @@
       "ebs-snapshot-gb-month": { "default": "0.050" },
       "eip-idle-hour": { "default": "0.005" },
       "rds-snapshot-gb-month": { "default": "0.095" },
-      "vpc-endpoint-hour": { "default": "0.01" }
+      "vpc-endpoint-hour": { "default": "0.01" },
+      "nat-gateway-hour": { "default": "0.045" },
+      "kms-key-month": { "default": "1.00" }
     },
     "eu-west-1": {
       "ebs-gb-month": {
@@ -50,7 +54,9 @@
       "ebs-snapshot-gb-month": { "default": "0.053" },
       "eip-idle-hour": { "default": "0.005" },
       "rds-snapshot-gb-month": { "default": "0.101" },
-      "vpc-endpoint-hour": { "default": "0.01" }
+      "vpc-endpoint-hour": { "default": "0.01" },
+      "nat-gateway-hour": { "default": "0.045" },
+      "kms-key-month": { "default": "1.00" }
     },
     "eu-central-1": {
       "ebs-gb-month": {
@@ -65,7 +71,9 @@
       "ebs-snapshot-gb-month": { "default": "0.054" },
       "eip-idle-hour": { "default": "0.005" },
       "rds-snapshot-gb-month": { "default": "0.103" },
-      "vpc-endpoint-hour": { "default": "0.01" }
+      "vpc-endpoint-hour": { "default": "0.01" },
+      "nat-gateway-hour": { "default": "0.045" },
+      "kms-key-month": { "default": "1.00" }
     },
     "ap-south-1": {
       "ebs-gb-month": {
@@ -80,7 +88,9 @@
       "ebs-snapshot-gb-month": { "default": "0.0500" },
       "eip-idle-hour": { "default": "0.005" },
       "rds-snapshot-gb-month": { "default": "0.0950" },
-      "vpc-endpoint-hour": { "default": "0.01" }
+      "vpc-endpoint-hour": { "default": "0.01" },
+      "nat-gateway-hour": { "default": "0.045" },
+      "kms-key-month": { "default": "1.00" }
     },
     "ap-southeast-1": {
       "ebs-gb-month": {
@@ -95,7 +105,9 @@
       "ebs-snapshot-gb-month": { "default": "0.050" },
       "eip-idle-hour": { "default": "0.005" },
       "rds-snapshot-gb-month": { "default": "0.103" },
-      "vpc-endpoint-hour": { "default": "0.01" }
+      "vpc-endpoint-hour": { "default": "0.01" },
+      "nat-gateway-hour": { "default": "0.045" },
+      "kms-key-month": { "default": "1.00" }
     }
   }
 }

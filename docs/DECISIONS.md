@@ -3,8 +3,9 @@
 The living spec. Updated whenever scope or a design choice changes, so neither of
 us has to reconstruct "why is it like this?" from a long conversation.
 
-**Status:** all eight shipped checks green; two Tier-1 backlog checks
-(`vpc-endpoints-unused`, `snapshot-orphaned`) pulled forward and shipped.
+**Status:** all twelve shipped checks green; five backlog checks pulled
+forward and shipped (`vpc-endpoints-unused`, `snapshot-orphaned` — Tier 1;
+`ami-orphaned-snapshots`, `nat-gw-idle`, `kms-unused-keys` — Tier 2).
 **Last updated:** 2026-08-15
 
 ---
@@ -62,10 +63,10 @@ again would break every one of them. Treat it as fixed going forward.
 
 ## 3. v1 scope
 
-Six checks across four services, plus two Tier-1 checks pulled forward from
-[`docs/CHECK-BACKLOG.md`](CHECK-BACKLOG.md) once the original six shipped.
-Every one is a pure `Describe`/`List` call, mockable offline with moto, and
-covered by a single read-only IAM policy.
+Seven checks across four services, plus five checks pulled forward from
+[`docs/CHECK-BACKLOG.md`](CHECK-BACKLOG.md) (two Tier 1, three Tier 2) once
+the original six shipped. Every one is a pure `Describe`/`List` call,
+mockable offline with moto, and covered by a single read-only IAM policy.
 
 | Check | Status | Notes |
 |---|---|---|
@@ -78,14 +79,77 @@ covered by a single read-only IAM policy.
 | `iam-stale-keys` | **Done** | Security/hygiene, not cost-waste. Global scope — see note below |
 | `vpc-endpoints-unused` | **Done** | Cost-awareness, not confirmed-idle — see note below |
 | `snapshot-orphaned` | **Done** | Missing source volume, not age; cost is an upper bound (see §5) — see note below |
+| `ami-orphaned-snapshots` | **Done** | Deregistered-AMI cleanup; cost is an upper bound (see §5) — see note below |
+| `nat-gw-idle` | **Done** | Heuristic, not proof — see note below |
+| `kms-unused-keys` | **Done** | Key-inventory cost finding, not an idleness claim — see note below |
 
-All eight checks are now shipped. Next up is v0.3 (deferred): `ec2-low-cpu`
+All twelve checks are now shipped. Next up is v0.3 (deferred): `ec2-low-cpu`
 and `sg-unused`, both still blocked on the reasons in the "Deferred to v0.3"
 section below, plus `--fix` (design not started). Beyond v0.3, candidate
 checks are triaged in [`docs/CHECK-BACKLOG.md`](CHECK-BACKLOG.md) rather
 than listed here — that document exists specifically so scope decisions for
 new checks get recorded once, not re-derived each time someone asks what's
 next.
+
+**2026-08-15 addition: `kms-unused-keys`.** "Unused" cannot be determined
+from Describe calls — KMS key activity is a CloudTrail/usage-metric
+question, not a response field — so this shipped as a key-inventory cost
+finding (every surviving customer-managed key costs `$1.00`/month,
+`CostConfidence.EXACT`, flat), not the usage-signal-gated version
+originally sketched in `docs/CHECK-BACKLOG.md`. Two exclusions, both
+verified rather than assumed: `KeyManager == "AWS"` (AWS-managed keys are
+free and not deletable — confirmed against AWS's KMS pricing page) and
+`KeyState` in `{Disabled, PendingDeletion}`. `PendingDeletion` is
+confirmed free ("no charge for customer managed KMS keys that ... are
+scheduled for deletion" — [aws.amazon.com/kms/pricing](https://aws.amazon.com/kms/pricing/)).
+`Disabled` is **not** free — disabling isn't deletion, and the per-key
+monthly charge draws no enabled/disabled distinction, confirmed via AWS
+re:Post reports of being billed for disabled keys. Excluding `Disabled`
+here is a deliberate scope choice, not a cost-honesty gap: a disabled key
+is one someone already consciously acted on, not hidden waste the way an
+untouched enabled key is. moto's `ListKeys` never returns the AWS-managed
+keys behind its seeded `alias/aws/*` aliases (their target key IDs don't
+appear in `list_keys()` output at all), which makes the AWS-managed
+exclusion untestable end-to-end via moto — `_should_include` is a pure,
+directly-testable predicate for exactly this reason, and the `run()`-level
+exclusion is verified by monkeypatching `_describe_key`.
+
+**2026-08-15 addition: `nat-gw-idle`.** "No running instances in the VPC"
+is a heuristic, not proof of idleness, and the finding text says so
+explicitly: Lambda functions, ECS/Fargate tasks, and RDS instances in the
+same VPC can all generate NAT Gateway traffic with zero EC2 instances
+present, invisible to a Describe-only check. Cost is
+`CostConfidence.LOWER_BOUND` — the hourly charge is priced, but per-GB data
+processing charges aren't visible from `DescribeNatGateways`. Severity is
+fixed `HIGH` with no configurable threshold, unlike most checks' pattern —
+per explicit instruction, NAT Gateways are consistently one of the most
+expensive idle resources in AWS, so there's no "too cheap to worry about"
+case the way there is for a single idle EIP. New pricing dimension
+`NAT_GATEWAY_HOUR`, seeded at the standard `~$0.045`/hr rate.
+
+**2026-08-15 addition: `ami-orphaned-snapshots`.** Matches on the
+undocumented but stable `Description` AWS auto-generates for the
+snapshot(s) `CreateImage` takes of an instance-backed AMI (`"Created by
+CreateImage(...) for ami-... from vol-..."`) — strict, anchored regex, no
+fuzzy fallback, so a non-matching description (snapshots from
+`RegisterImage` against a pre-existing snapshot, or cross-region
+`CopyImage`, both of which use different wording) is a false negative,
+never a false positive. Unlike `ec2-stopped`'s `StateTransitionReason`
+parsing, this description is immutable after creation (no API edits it),
+so a match found today can't be invalidated by a later edit. Deduplicated
+against `snapshot-orphaned`: the only overlap is a snapshot whose source
+volume is *also* gone, which `snapshot-orphaned` already claims (its
+AMI-backing exclusion only covers snapshots backing a currently *existing*
+AMI). This check only reports a snapshot when its `VolumeId` still exists
+— the "AMI gone, volume still there" case `snapshot-orphaned` never
+touches — which needed adding `ec2:DescribeVolumes` to `required_actions`
+beyond the two originally specified (already granted account-wide via
+other checks, so no IAM-policy expansion). moto's own `create_image()`
+produces different wording (`"Auto-created snapshot for AMI ami-xxx"`) and
+leaks its seeded public-AMI catalog the same way `describe_snapshots`
+does, so tests construct the description directly via
+`create_snapshot(..., Description=...)` rather than relying on
+`create_image()`'s side effects.
 
 **2026-08-15 addition: `snapshot-orphaned`.** Same cost-honesty shape as
 `ebs-snapshot-age` (`VolumeSize` is the size of the source volume — which,

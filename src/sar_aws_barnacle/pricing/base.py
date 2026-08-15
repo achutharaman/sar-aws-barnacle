@@ -18,6 +18,8 @@ EBS_SNAPSHOT_GB_MONTH = "ebs-snapshot-gb-month"
 EIP_IDLE_HOUR = "eip-idle-hour"
 RDS_SNAPSHOT_GB_MONTH = "rds-snapshot-gb-month"
 VPC_ENDPOINT_HOUR = "vpc-endpoint-hour"
+NAT_GATEWAY_HOUR = "nat-gateway-hour"
+KMS_KEY_MONTH = "kms-key-month"
 
 HOURS_PER_MONTH = Decimal(730)
 

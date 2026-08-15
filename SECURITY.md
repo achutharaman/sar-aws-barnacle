@@ -2,9 +2,11 @@
 
 ## Supported versions
 
-sar-aws-barnacle has no stable release yet — nothing has been published to
-PyPI and no `v*` tag exists. Only the latest commit on `main` is supported;
-there is no older version to patch.
+`sar-aws-barnacle` is published on [PyPI](https://pypi.org/project/sar-aws-barnacle/)
+(`0.1.0` released 2026-08-14; see [`CHANGELOG.md`](CHANGELOG.md) for
+subsequent releases). As a single-maintainer project, only the latest
+published release is supported — there are no backports to older versions,
+so upgrading to the latest release is the fix for any reported issue.
 
 ## Reporting a vulnerability
 

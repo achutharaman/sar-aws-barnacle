@@ -8,6 +8,7 @@
         "ec2:DescribeAddresses",
         "ec2:DescribeImages",
         "ec2:DescribeInstances",
+        "ec2:DescribeNatGateways",
         "ec2:DescribeRegions",
         "ec2:DescribeSnapshots",
         "ec2:DescribeVolumes",
@@ -15,6 +16,10 @@
         "iam:GetAccessKeyLastUsed",
         "iam:ListAccessKeys",
         "iam:ListUsers",
+        "kms:DescribeKey",
+        "kms:ListAliases",
+        "kms:ListKeys",
+        "kms:ListResourceTags",
         "rds:DescribeDBSnapshots",
         "sts:GetCallerIdentity"
       ],
