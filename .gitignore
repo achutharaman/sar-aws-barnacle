@@ -26,6 +26,7 @@ htmlcov/
 *.json
 !src/sar_aws_barnacle/pricing/data/prices.seed.json
 *.docx
+*.txt
 
 # Local project/tooling config, not for the public repo
 CLAUDE.md
