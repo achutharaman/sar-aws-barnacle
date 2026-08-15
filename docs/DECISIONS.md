@@ -3,8 +3,8 @@
 The living spec. Updated whenever scope or a design choice changes, so neither of
 us has to reconstruct "why is it like this?" from a long conversation.
 
-**Status:** v0.1 scaffolding complete — core engine and two checks, green tests.
-**Last updated:** 2026-08-14
+**Status:** v0.1 complete — all six planned checks shipped, green tests.
+**Last updated:** 2026-08-15
 
 ---
 
@@ -65,11 +65,95 @@ mockable offline with moto, and covered by a single read-only IAM policy.
 |---|---|---|
 | `ebs-unattached` | **Done** | Volumes in `available` state. Exact cost by size × type |
 | `ebs-unencrypted` | **Done** | Security/hygiene, not cost-waste — see note below |
-| `eip-unassociated` | Next | Trivial, exact cost |
-| `ec2-stopped` | Planned | Stopped longer than N days |
-| `ebs-snapshot-age` | Planned | Age only; cost is an upper bound (see §5) |
-| `rds-snapshot-age` | Planned | Same shape as above, different API |
-| `iam-stale-keys` | Planned | Old and never-used keys. Global scope. Highest signal per line of code |
+| `eip-unassociated` | **Done** | Trivial, exact flat cost — no age dimension; see note below |
+| `ec2-stopped` | **Done** | Cost is attached-EBS-storage only; age is best-effort — see note below |
+| `ebs-snapshot-age` | **Done** | Age only; cost is an upper bound (see §5) |
+| `rds-snapshot-age` | **Done** | Same shape as above, different API; manual snapshots only — see note below |
+| `iam-stale-keys` | **Done** | Security/hygiene, not cost-waste. Global scope — see note below |
+
+All six v1 checks are now shipped. Next up is v0.3 (deferred): `ec2-low-cpu`
+and `sg-unused`, both still blocked on the reasons in the "Deferred to v0.3"
+section below, plus `--fix` (design not started).
+
+**2026-08-15 addition: `iam-stale-keys`.** The first `Scope.GLOBAL` check,
+and security/hygiene rather than cost-waste, same as `ebs-unencrypted` — IAM
+itself has no price, so every finding carries `CostConfidence.UNKNOWN` by
+design, not as a pricing gap. Deliberately does *not* use
+`iam:GenerateCredentialReport` (the standard, efficient, one-call way to
+audit stale credentials): that operation name doesn't start with an allowed
+read-only prefix (`Describe`/`Get`/`List`/`BatchGet`/`Lookup`/`Head`), so
+the botocore guard would block it and crash the scan (`ReadOnlyViolationError`
+propagates rather than degrading — see §7) rather than expanding the
+allowlist without the discussion the hard rules call for. Uses
+`ListUsers` + `ListAccessKeys` + `GetAccessKeyLastUsed` instead — more API
+calls for a large account, but each one already fits the existing
+permission model with zero core changes. "Never used" is measured from
+`CreateDate`, "used a while ago" from `LastUsedDate` — a key created
+recently and never used yet is not suspicious; a key untouched for a year
+is.
+
+**2026-08-15 addition: `rds-snapshot-age`.** Same cost-honesty shape as
+`ebs-snapshot-age` (`AllocatedStorage` is the source database's
+provisioned size, not what the snapshot's backup storage actually
+consumes, so cost is `UPPER_BOUND`, never `EXACT`). Restricted to manual
+snapshots only (`SnapshotType=manual`): automated snapshots are AWS-managed
+with a retention window capped at 35 days, so one old enough to trip even
+the default 90-day threshold cannot exist in practice. Needed a new pricing
+dimension, `RDS_SNAPSHOT_GB_MONTH` — added as data (a new dimension
+constant plus seed-table entries), not as a change to the pricing
+interface itself, matching how `pricing/base.py` is designed to extend.
+
+**2026-08-15 addition: `ebs-snapshot-age`.** Matches the cost design §5
+already specified (`UPPER_BOUND`, never `EXACT`) with one implementation
+wrinkle worth recording: filters by `owner-id` explicitly (via one
+`sts:GetCallerIdentity` call, already a baseline action) rather than
+`DescribeSnapshots`'s `OwnerIds=["self"]` keyword. moto does not implement
+that keyword — it returns its entire seeded public-AMI snapshot catalog
+instead (~1000+ snapshots from unrelated owner accounts), which would have
+made this untestable. The explicit `owner-id` filter is equally correct
+against real AWS and is what actually gets exercised in tests.
+
+**2026-08-15 addition: `ec2-stopped`.** Two departures from the original
+"stopped longer than N days" framing, both because the underlying API
+doesn't support it cleanly:
+
+- **Cost is the attached EBS storage, not compute.** AWS does not bill for
+  a stopped instance's compute time at all — the only thing still costing
+  money is whatever EBS volumes remain attached to it. `DescribeInstances`
+  gives volume IDs via `BlockDeviceMappings` but not size/type, so the
+  check batches those IDs into one `DescribeVolumes` call (not one per
+  instance) and prices them the same way `ebs-unattached` does. An
+  instance with no billable storage correctly reports `$0` at
+  `EXACT` confidence — that's not the `CostConfidence.UNKNOWN` case; there
+  is nothing left unpriced.
+- **Age is best-effort, not authoritative.** `DescribeInstances` has no
+  `StoppedTime` field, and `LaunchTime` is when the instance was
+  *launched* — using it would misreport a two-year-old instance stopped
+  yesterday as having sat idle for years. The only place a stop date
+  appears is `StateTransitionReason` (e.g. `"User initiated (2026-08-15
+  07:19:54 UTC)"`), a field AWS documents as descriptive text, not a
+  versioned API contract, and whose format varies by *why* the instance
+  stopped — a Spot interruption or failed health check doesn't always
+  embed a parseable date. Per explicit instruction: every stopped instance
+  is still reported regardless of whether the date parses. Severity is a
+  straight 24-hour split — `HIGH` if stopped more than a day ago, `LOW` if
+  within the last day, `MEDIUM` when the timestamp can't be parsed at all
+  (an unknown age is a real unknown, not quietly downgraded to `LOW`).
+
+**2026-08-15 addition: `eip-unassociated`.** Simpler than planned, in one
+respect that's worth recording: `DescribeAddresses` has no allocation
+timestamp field at all (confirmed against the botocore service model, not
+just moto), so there's no `min_age_days` option here the way
+`ebs-unattached` has one — there is nothing to compute age from. Severity is
+cost-threshold only (`HIGH` if `≥ high_severity_usd`, else `MEDIUM`); since
+the idle-hour rate is flat (~$3.65/month at seed pricing, uniform across
+regions in the seed table), the default `$20` threshold rarely fires in
+practice and severity is effectively always `MEDIUM` unless a caller lowers
+it — an honest reflection of there being no dimension differentiating one
+idle EIP from another. Also has no pagination for the same reason
+`describe_regions` and `get_caller_identity` don't: `DescribeAddresses`
+doesn't support a paginator (an account's EIP count is capped well below a
+page size by design), so this is not a hard-rule violation.
 
 **2026-08-14 addition: `ebs-unencrypted`.** Flagged before implementing,
 built anyway: this is a security/hygiene finding, not a cost-waste one —
