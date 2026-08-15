@@ -235,8 +235,9 @@ Each check can expose its own options in a `[sar-aws-barnacle.checks.<check-id>]
 | `eip-unassociated` | `high_severity_usd` | `20` | Findings at or above this monthly cost are `HIGH`. Idle-EIP pricing is flat (~$3.65/month), so this rarely fires unless lowered — severity is effectively always `MEDIUM` out of the box |
 | `ebs-snapshot-age`, `rds-snapshot-age`, `iam-stale-keys` | `min_age_days` | `90` | Ignore anything younger than this |
 | `ebs-snapshot-age`, `rds-snapshot-age`, `iam-stale-keys` | `high_severity_days` | `365` | Findings at or beyond this age are `HIGH` instead of `MEDIUM` |
+| `vpc-endpoints-unused` | `high_severity_usd` | `20` | Findings at or above this monthly cost are `HIGH` instead of `MEDIUM`. Cost scales with the number of AZs an endpoint spans, so a multi-AZ endpoint crosses this more easily than a single-AZ one |
 
-`ec2-stopped` and `ebs-unencrypted` have no tunables — `ec2-stopped`'s `LOW`/`HIGH` split is a fixed 24-hour threshold (see [`docs/DECISIONS.md`](docs/DECISIONS.md) §3), and `ebs-unencrypted`'s severity depends only on whether the volume is attached.
+`ec2-stopped`, `ebs-unencrypted`, and `snapshot-orphaned` have no tunables — `ec2-stopped`'s `LOW`/`HIGH` split is a fixed 24-hour threshold (see [`docs/DECISIONS.md`](docs/DECISIONS.md) §3), `ebs-unencrypted`'s severity depends only on whether the volume is attached, and `snapshot-orphaned` is always `MEDIUM`.
 
 ```toml
 [sar-aws-barnacle]
@@ -310,6 +311,10 @@ Then run `python scripts/generate_iam_policy.py` so the published policy covers 
 - [x] `ebs-snapshot-age` — ageing snapshots; cost is an upper bound (see [`docs/DECISIONS.md`](docs/DECISIONS.md) §5)
 - [x] `rds-snapshot-age` — same shape, manual snapshots only
 - [x] `iam-stale-keys` — old and never-used access keys; security/hygiene, first `Scope.GLOBAL` check; see [`docs/DECISIONS.md`](docs/DECISIONS.md) §3
+
+**Pulled forward from [`docs/CHECK-BACKLOG.md`](docs/CHECK-BACKLOG.md) — shipped**
+- [x] `vpc-endpoints-unused` — Interface VPC endpoints; cost-awareness, not confirmed-idle; see [`docs/DECISIONS.md`](docs/DECISIONS.md) §3
+- [x] `snapshot-orphaned` — EBS snapshots whose source volume no longer exists; cost is an upper bound (see [`docs/DECISIONS.md`](docs/DECISIONS.md) §5)
 
 **v0.3 — designed, not started**
 - [ ] `ec2-low-cpu` — idle running instances via CloudWatch

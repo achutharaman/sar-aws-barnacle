@@ -3,7 +3,8 @@
 The living spec. Updated whenever scope or a design choice changes, so neither of
 us has to reconstruct "why is it like this?" from a long conversation.
 
-**Status:** v0.1 complete — all six planned checks shipped, green tests.
+**Status:** all eight shipped checks green; two Tier-1 backlog checks
+(`vpc-endpoints-unused`, `snapshot-orphaned`) pulled forward and shipped.
 **Last updated:** 2026-08-15
 
 ---
@@ -61,8 +62,10 @@ again would break every one of them. Treat it as fixed going forward.
 
 ## 3. v1 scope
 
-Six checks across four services. Every one is a pure `Describe`/`List` call,
-mockable offline with moto, and covered by a single read-only IAM policy.
+Six checks across four services, plus two Tier-1 checks pulled forward from
+[`docs/CHECK-BACKLOG.md`](CHECK-BACKLOG.md) once the original six shipped.
+Every one is a pure `Describe`/`List` call, mockable offline with moto, and
+covered by a single read-only IAM policy.
 
 | Check | Status | Notes |
 |---|---|---|
@@ -73,10 +76,50 @@ mockable offline with moto, and covered by a single read-only IAM policy.
 | `ebs-snapshot-age` | **Done** | Age only; cost is an upper bound (see §5) |
 | `rds-snapshot-age` | **Done** | Same shape as above, different API; manual snapshots only — see note below |
 | `iam-stale-keys` | **Done** | Security/hygiene, not cost-waste. Global scope — see note below |
+| `vpc-endpoints-unused` | **Done** | Cost-awareness, not confirmed-idle — see note below |
+| `snapshot-orphaned` | **Done** | Missing source volume, not age; cost is an upper bound (see §5) — see note below |
 
-All six v1 checks are now shipped. Next up is v0.3 (deferred): `ec2-low-cpu`
+All eight checks are now shipped. Next up is v0.3 (deferred): `ec2-low-cpu`
 and `sg-unused`, both still blocked on the reasons in the "Deferred to v0.3"
-section below, plus `--fix` (design not started).
+section below, plus `--fix` (design not started). Beyond v0.3, candidate
+checks are triaged in [`docs/CHECK-BACKLOG.md`](CHECK-BACKLOG.md) rather
+than listed here — that document exists specifically so scope decisions for
+new checks get recorded once, not re-derived each time someone asks what's
+next.
+
+**2026-08-15 addition: `snapshot-orphaned`.** Same cost-honesty shape as
+`ebs-snapshot-age` (`VolumeSize` is the size of the source volume — which,
+here, doesn't even exist anymore to compare against — so cost is
+`UPPER_BOUND`, never `EXACT`). Reuses the same `owner-id`-filter-via-
+`sts:GetCallerIdentity` pattern for the same moto `OwnerIds=["self"]`
+limitation. AMI-backed snapshots are excluded entirely rather than flagged
+with softer wording — a snapshot backing a registered AMI has an active
+purpose even though its source volume is gone, the same way
+`ebs-unattached` excludes attached volumes rather than caveat-flagging
+them. One moto limitation worth recording: `register_image` does not honour
+a caller-supplied `SnapshotId` in `BlockDeviceMappings` (it synthesizes its
+own), so the real AMI-backed relationship can't be constructed through the
+API in tests — the AMI lookup (`_ami_backed_snapshot_ids`) is monkeypatched
+directly in `run()` tests, with the pure parsing logic
+(`_extract_backing_snapshot_ids`) unit-tested separately against hand-built
+data.
+
+**2026-08-15 addition: `vpc-endpoints-unused`.** Dropped
+`ec2:DescribeNetworkInterfaces` from the original backlog spec after
+verifying it's unnecessary — `DescribeVpcEndpoints` already returns
+`SubnetIds`, which is enough to determine the AZ count the hourly charge
+scales with. This is a cost-awareness finding, not a confirmed-idle one:
+`DescribeVpcEndpoints` has no traffic, connection-count, or last-activity
+field (confirmed against the botocore service model) — actual PrivateLink
+usage is exclusively a CloudWatch metric, the same dependency blocking the
+CloudWatch checks in `docs/CHECK-BACKLOG.md`. Every Interface endpoint is
+reported, worded as "here's what this costs, confirm it's still needed"
+rather than "this is unused." Gateway endpoints (S3, DynamoDB) are free and
+excluded entirely — flagging one would report imaginary savings. Cost is
+`LOWER_BOUND`: the hourly per-AZ charge is priced, but data-processing
+charges aren't visible from a Describe call. Needed a new pricing
+dimension, `VPC_ENDPOINT_HOUR` — added as data, same as
+`RDS_SNAPSHOT_GB_MONTH` before it.
 
 **2026-08-15 addition: `iam-stale-keys`.** The first `Scope.GLOBAL` check,
 and security/hygiene rather than cost-waste, same as `ebs-unencrypted` — IAM

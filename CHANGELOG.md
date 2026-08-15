@@ -13,6 +13,11 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   real design deviations from the original roadmap wording, forced by AWS
   API limitations rather than choice — see `docs/DECISIONS.md` §3 for the
   reasoning behind each.
+- Two more checks pulled forward from `docs/CHECK-BACKLOG.md`:
+  `vpc-endpoints-unused` (Interface VPC endpoints, a cost-awareness finding
+  rather than a confirmed-idle one — see `docs/DECISIONS.md` §3) and
+  `snapshot-orphaned` (EBS snapshots whose source volume no longer exists,
+  with AMI-backed snapshots excluded entirely).
 - Live progress bar during `scan` (stderr only; skipped automatically for
   piped or non-interactive output).
 - Per-region, per-check status breakdown in both the table and JSON
