@@ -45,14 +45,17 @@ for consistency across the portfolio.
 The import package was originally kept at `aws_barnacle` rather than moving to
 `sar_aws_barnacle` with the rest, specifically to dodge a PyPI namespace
 collision with the unrelated, already-published `barnacle` package. That
-constraint turned out not to apply: this project itself has never been
-published (`pypi.org/project/sar-aws-barnacle` returns 404, no `v*` tag has
-ever been pushed), so nothing depends on `import aws_barnacle` yet and there
-was no live collision risk to avoid. With the constraint gone, the import
-package was renamed to `sar_aws_barnacle` for the same portfolio-wide
-consistency as everything else in this table. This reasoning stops applying
-the moment the package is actually published — renaming the import path after
-that point would break every existing installation.
+constraint turned out not to apply *at the time*: this project itself had not
+yet been published (`pypi.org/project/sar-aws-barnacle` returned 404, no
+`v*` tag had been pushed), so nothing depended on `import aws_barnacle` and
+there was no live collision risk to avoid. With the constraint gone, the
+import package was renamed to `sar_aws_barnacle` for the same portfolio-wide
+consistency as everything else in this table.
+
+**That window has since closed.** `sar-aws-barnacle` `0.1.0` published to
+PyPI on 2026-08-14, with the import package already at `sar_aws_barnacle`.
+The import path is now load-bearing for real installations — renaming it
+again would break every one of them. Treat it as fixed going forward.
 
 ---
 
@@ -154,21 +157,6 @@ idle EIP from another. Also has no pagination for the same reason
 `describe_regions` and `get_caller_identity` don't: `DescribeAddresses`
 doesn't support a paginator (an account's EIP count is capped well below a
 page size by design), so this is not a hard-rule violation.
-
-**2026-08-14 addition: `ebs-unencrypted`.** Flagged before implementing,
-built anyway: this is a security/hygiene finding, not a cost-waste one —
-encryption status has zero bearing on what a volume costs, so it doesn't
-really answer §1's "what am I paying for that nothing is using?" It was
-added on explicit request rather than blocked on the mismatch, because it
-fits the existing architecture without touching core: same
-`ec2:DescribeVolumes` permission already granted, and
-`CostConfidence.UNKNOWN` is already the correct, honest answer for "this
-check has no cost claim to make" — not a workaround stretched to fit. Every
-finding it produces carries `estimated_monthly_cost=None`, so it never
-contributes to "Estimated monthly waste." One exception isn't a pattern; if
-more non-cost checks show up, this tool's identity as a pure cost-waste
-scanner is worth an explicit revisit rather than drifting into a general
-hygiene/CSPM tool by accretion.
 
 **2026-08-14 addition: `ebs-unencrypted`.** Flagged before implementing,
 built anyway: this is a security/hygiene finding, not a cost-waste one —
