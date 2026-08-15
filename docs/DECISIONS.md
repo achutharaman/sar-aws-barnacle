@@ -170,6 +170,21 @@ more non-cost checks show up, this tool's identity as a pure cost-waste
 scanner is worth an explicit revisit rather than drifting into a general
 hygiene/CSPM tool by accretion.
 
+**2026-08-14 addition: `ebs-unencrypted`.** Flagged before implementing,
+built anyway: this is a security/hygiene finding, not a cost-waste one —
+encryption status has zero bearing on what a volume costs, so it doesn't
+really answer §1's "what am I paying for that nothing is using?" It was
+added on explicit request rather than blocked on the mismatch, because it
+fits the existing architecture without touching core: same
+`ec2:DescribeVolumes` permission already granted, and
+`CostConfidence.UNKNOWN` is already the correct, honest answer for "this
+check has no cost claim to make" — not a workaround stretched to fit. Every
+finding it produces carries `estimated_monthly_cost=None`, so it never
+contributes to "Estimated monthly waste." One exception isn't a pattern; if
+more non-cost checks show up, this tool's identity as a pure cost-waste
+scanner is worth an explicit revisit rather than drifting into a general
+hygiene/CSPM tool by accretion.
+
 ### Deferred to v0.3
 
 **`ec2-low-cpu`** — idle running instances via CloudWatch. Different API,
