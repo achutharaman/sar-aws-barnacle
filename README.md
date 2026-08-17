@@ -28,25 +28,31 @@ $ sar-aws-barnacle scan --region ap-south-1
 sar-aws-barnacle scan · 1 region(s) · account 123456789012
 
 Regions
-┏━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
-┃ Region     ┃ ebs-unattached ┃ ebs-unencrypted ┃
-┡━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
-│ ap-south-1 │ 2 finding(s)   │ clean           │
-└────────────┴────────────────┴─────────────────┘
+┏━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
+┃ Region     ┃ ami-orphaned-snapshots ┃ ebs-snapshot-age ┃ ebs-unattached ┃ ebs-unencrypted ┃ ec2-stopped ┃ eip-unassociated ┃ kms-unused-keys ┃ nat-gw-idle ┃ rds-snapshot-age ┃ snapshot-orphaned ┃ vpc-endpoints-unused ┃ iam-stale-keys ┃
+┡━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━┩
+│ ap-south-1 │ clean                  │ clean            │ 2 finding(s)   │ 2 finding(s)    │ clean       │ 1 finding(s)     │ clean           │ clean       │ clean            │ 1 finding(s)      │ clean                │ —              │
+│ global     │ —                      │ —                │ —              │ —               │ —           │ —                │ —               │ —           │ —                │ —                 │ —                    │ clean          │
+└────────────┴────────────────────────┴──────────────────┴────────────────┴─────────────────┴─────────────┴──────────────────┴─────────────────┴─────────────┴──────────────────┴───────────────────┴──────────────────────┴────────────────┘
 
-┏━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Severity ┃ Check         ┃ Region     ┃ Resource              ┃ Monthly ┃ Detail                           ┃
-┡━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ HIGH     │ ebs-unattached│ ap-south-1 │ vol-0a1b2c3d4e5f67890 │  $91.20 │ 1000 GiB gp3 volume in state     │
-│          │               │            │                       │         │ 'available', created 412 days ago│
-│ MEDIUM   │ ebs-unattached│ ap-south-1 │ vol-0987654321fedcba0 │   $9.12 │ 100 GiB gp3 volume in state      │
-│          │               │            │                       │         │ 'available', created 63 days ago │
-└──────────┴───────────────┴────────────┴───────────────────────┴─────────┴──────────────────────────────────┘
+┏━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃Severity ┃ Check             ┃ Region     ┃ Resource                   ┃ Monthly ┃ Detail                                                                                                                                                             ┃
+┡━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│HIGH     │ ebs-unattached    │ ap-south-1 │ vol-2b99def25e63a706f      │  $91.20 │ 1000 GiB gp3 volume in state 'available' (attached to nothing), created 412 days ago                                                                               │
+│MEDIUM   │ ebs-unattached    │ ap-south-1 │ vol-c8ba49fa1a469fe0d      │   $9.12 │ 100 GiB gp3 volume in state 'available' (attached to nothing), created 63 days ago                                                                                 │
+│MEDIUM   │ eip-unassociated  │ ap-south-1 │ eipalloc-3d7da59782c245151 │   $3.65 │ Elastic IP 127.129.76.70 is not associated with any resource                                                                                                       │
+│MEDIUM   │ snapshot-orphaned │ ap-south-1 │ snap-4469326a4e9951727     │  ≤$2.50 │ 50 GiB snapshot's source volume (vol-c91238d5cb46eb87e) no longer exists; cost is an upper bound -- snapshots bill on incremental storage, which the API does not …│
+│MEDIUM   │ ebs-unencrypted   │ ap-south-1 │ vol-2b99def25e63a706f      │ unknown │ 1000 GiB gp3 volume is not encrypted, not attached, created 0 days ago                                                                                             │
+│MEDIUM   │ ebs-unencrypted   │ ap-south-1 │ vol-c8ba49fa1a469fe0d      │ unknown │ 100 GiB gp3 volume is not encrypted, not attached, created 0 days ago                                                                                              │
+└─────────┴───────────────────┴────────────┴────────────────────────────┴─────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-Estimated monthly waste: $100.32  ($1,203.84/year)
-2 finding(s) across 2 check(s) in 0.84s
-Prices: AWS Pricing API (cached)
+Estimated monthly waste: $106.47  ($1,277.64/year)
+6 finding(s) across 12 check(s) in 1.14s
+2 finding(s) could not be priced and are excluded from the total.
+Prices: bundled seed table (2026-08-01)
 ```
+
+This is real, unfiltered output — a bare `sar-aws-barnacle scan` runs all twelve registered checks, one column per check in the **Regions** grid. Eight report `clean` here; two volumes trip both `ebs-unattached` (cost) and `ebs-unencrypted` (hygiene, `unknown` cost by design — see [Cost honesty](docs/DECISIONS.md) §5) independently. `iam-stale-keys` is the one `Scope.GLOBAL` check, so it reports once under a synthetic `global` row instead of once per region — the `—` cells mark combinations that don't apply (a regional check has no `global` row and vice versa), not unknown status. `≤$2.50` marks an upper-bound cost.
 
 ## Install
 
@@ -114,7 +120,7 @@ Note that errors outrank findings. A scan that could not complete is an unanswer
 
 ## IAM policy
 
-sar-aws-barnacle needs read access and nothing else. This policy is **generated from the code** — every check declares the API calls it makes, and CI fails if this file drifts from what the code actually calls. Regenerate the exact policy for your selection of checks with `sar-aws-barnacle iam-policy`.
+sar-aws-barnacle needs read access and nothing else. This policy is **generated from the code** — every check declares the API calls it makes, and CI fails if this file drifts from what the code actually calls. The block below is the full policy for every check currently shipped; run `sar-aws-barnacle iam-policy` to get the exact (possibly smaller) policy for whichever checks you actually enable.
 
 ```json
 {
@@ -124,8 +130,22 @@ sar-aws-barnacle needs read access and nothing else. This policy is **generated 
       "Sid": "SarAwsBarnacleReadOnlyScan",
       "Effect": "Allow",
       "Action": [
+        "ec2:DescribeAddresses",
+        "ec2:DescribeImages",
+        "ec2:DescribeInstances",
+        "ec2:DescribeNatGateways",
         "ec2:DescribeRegions",
+        "ec2:DescribeSnapshots",
         "ec2:DescribeVolumes",
+        "ec2:DescribeVpcEndpoints",
+        "iam:GetAccessKeyLastUsed",
+        "iam:ListAccessKeys",
+        "iam:ListUsers",
+        "kms:DescribeKey",
+        "kms:ListAliases",
+        "kms:ListKeys",
+        "kms:ListResourceTags",
+        "rds:DescribeDBSnapshots",
         "sts:GetCallerIdentity"
       ],
       "Resource": "*"
@@ -235,8 +255,9 @@ Each check can expose its own options in a `[sar-aws-barnacle.checks.<check-id>]
 | `eip-unassociated` | `high_severity_usd` | `20` | Findings at or above this monthly cost are `HIGH`. Idle-EIP pricing is flat (~$3.65/month), so this rarely fires unless lowered — severity is effectively always `MEDIUM` out of the box |
 | `ebs-snapshot-age`, `rds-snapshot-age`, `iam-stale-keys` | `min_age_days` | `90` | Ignore anything younger than this |
 | `ebs-snapshot-age`, `rds-snapshot-age`, `iam-stale-keys` | `high_severity_days` | `365` | Findings at or beyond this age are `HIGH` instead of `MEDIUM` |
+| `vpc-endpoints-unused` | `high_severity_usd` | `20` | Findings at or above this monthly cost are `HIGH` instead of `MEDIUM`. Cost scales with the number of AZs an endpoint spans, so a multi-AZ endpoint crosses this more easily than a single-AZ one |
 
-`ec2-stopped` and `ebs-unencrypted` have no tunables — `ec2-stopped`'s `LOW`/`HIGH` split is a fixed 24-hour threshold (see [`docs/DECISIONS.md`](docs/DECISIONS.md) §3), and `ebs-unencrypted`'s severity depends only on whether the volume is attached.
+`ec2-stopped`, `ebs-unencrypted`, `snapshot-orphaned`, `ami-orphaned-snapshots`, `nat-gw-idle`, and `kms-unused-keys` have no tunables — `ec2-stopped`'s `LOW`/`HIGH` split is a fixed 24-hour threshold (see [`docs/DECISIONS.md`](docs/DECISIONS.md) §3), `ebs-unencrypted`'s severity depends only on whether the volume is attached, `snapshot-orphaned` and `ami-orphaned-snapshots` are always `MEDIUM`, `nat-gw-idle` is always `HIGH`, and `kms-unused-keys` is always `LOW`.
 
 ```toml
 [sar-aws-barnacle]
@@ -299,29 +320,9 @@ This one's illustrative only — the real `ec2-low-cpu` needs more than a CPU th
 
 Then run `python scripts/generate_iam_policy.py` so the published policy covers the new permission.
 
-## Roadmap
-
-**v0.1 — shipped, all six planned checks done**
-- [x] Core engine, registry, read-only guard, pricing, table + JSON output
-- [x] `ebs-unattached`
-- [x] `ebs-unencrypted` — security/hygiene, not cost-waste; see [`docs/DECISIONS.md`](docs/DECISIONS.md) §3
-- [x] `eip-unassociated` — unassociated Elastic IPs
-- [x] `ec2-stopped` — long-stopped instances; cost is attached storage, age is best-effort; see [`docs/DECISIONS.md`](docs/DECISIONS.md) §3
-- [x] `ebs-snapshot-age` — ageing snapshots; cost is an upper bound (see [`docs/DECISIONS.md`](docs/DECISIONS.md) §5)
-- [x] `rds-snapshot-age` — same shape, manual snapshots only
-- [x] `iam-stale-keys` — old and never-used access keys; security/hygiene, first `Scope.GLOBAL` check; see [`docs/DECISIONS.md`](docs/DECISIONS.md) §3
-
-**v0.3 — designed, not started**
-- [ ] `ec2-low-cpu` — idle running instances via CloudWatch
-- [ ] `sg-unused` — security groups attached to no ENI and referenced by no rule
-- [ ] `--fix` behind an explicit opt-in, with a plan/apply split
-
-**Considered and rejected for now**
-- *RDS reservation recommendations.* Not a hygiene check — it needs weeks of usage history and Cost Explorer's paid API, which does not fit a stateless single-pass scanner. See [`docs/DECISIONS.md`](docs/DECISIONS.md).
-
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). New checks are very welcome; the bar is a test that proves the detection logic and an honest cost confidence level.
+See [CONTRIBUTING.md](CONTRIBUTING.md). New checks are very welcome; the bar is a test that proves the detection logic and an honest cost confidence level. See [`docs/ROADMAP.md`](docs/ROADMAP.md) for what's shipped and what's next.
 
 Found a security issue? See [SECURITY.md](SECURITY.md) — please don't open a public issue for it.
 
