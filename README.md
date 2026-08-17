@@ -5,7 +5,7 @@
 [![CI](https://github.com/achutharaman/sar-aws-barnacle/actions/workflows/ci.yml/badge.svg)](https://github.com/achutharaman/sar-aws-barnacle/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/sar-aws-barnacle.svg)](https://pypi.org/project/sar-aws-barnacle/)
 [![Python](https://img.shields.io/pypi/pyversions/sar-aws-barnacle.svg)](https://pypi.org/project/sar-aws-barnacle/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/achutharaman/sar-aws-barnacle/blob/main/LICENSE)
 
 ---
 
@@ -18,9 +18,6 @@ AWS Cost Explorer tells you *what you spent*. It does not tell you *which specif
 sar-aws-barnacle sits in the gap. It answers one question — **"what am I paying for that nothing is using?"** — and answers it with resource IDs, dollar figures, and an exit code you can wire into CI. It has no delete path at all.
 
 ## Demo
-
-<!-- TODO: replace with an asciinema recording or GIF of `sar-aws-barnacle scan` -->
-![sar-aws-barnacle scan demo](docs/demo.gif)
 
 ```
 $ sar-aws-barnacle scan --region ap-south-1
@@ -52,7 +49,7 @@ Estimated monthly waste: $106.47  ($1,277.64/year)
 Prices: bundled seed table (2026-08-01)
 ```
 
-This is real, unfiltered output — a bare `sar-aws-barnacle scan` runs all twelve registered checks, one column per check in the **Regions** grid. Eight report `clean` here; two volumes trip both `ebs-unattached` (cost) and `ebs-unencrypted` (hygiene, `unknown` cost by design — see [Cost honesty](docs/DECISIONS.md) §5) independently. `iam-stale-keys` is the one `Scope.GLOBAL` check, so it reports once under a synthetic `global` row instead of once per region — the `—` cells mark combinations that don't apply (a regional check has no `global` row and vice versa), not unknown status. `≤$2.50` marks an upper-bound cost.
+This is real, unfiltered output — a bare `sar-aws-barnacle scan` runs all twelve registered checks, one column per check in the **Regions** grid. Eight report `clean` here; two volumes trip both `ebs-unattached` (cost) and `ebs-unencrypted` (hygiene, `unknown` cost by design — see [Cost honesty](https://github.com/achutharaman/sar-aws-barnacle/blob/main/docs/DECISIONS.md) §5) independently. `iam-stale-keys` is the one `Scope.GLOBAL` check, so it reports once under a synthetic `global` row instead of once per region — the `—` cells mark combinations that don't apply (a regional check has no `global` row and vice versa), not unknown status. `≤$2.50` marks an upper-bound cost.
 
 ## Install
 
@@ -237,7 +234,7 @@ Then edit the values you want to change — anything you leave out falls back to
 | Profile | `profile` | `SAR_AWS_BARNACLE_PROFILE` | `--profile` | `sar-aws-barnacle-scanner` if configured, else default AWS credentials | Named AWS CLI profile to authenticate with |
 | Output | `output` | `SAR_AWS_BARNACLE_OUTPUT` | `--output` / `-o` | `table` | `table` or `json` |
 | Fail on | `fail_on` | `SAR_AWS_BARNACLE_FAIL_ON` | `--fail-on` | `none` | Minimum severity that exits 1: `none`, `any`, `low`, `medium`, `high` |
-| Minimum savings | `min_monthly_savings` | — | `--min-savings` | `0` | Hide findings cheaper than this per month. Unpriced findings are always kept — see [Cost honesty](docs/DECISIONS.md) |
+| Minimum savings | `min_monthly_savings` | — | `--min-savings` | `0` | Hide findings cheaper than this per month. Unpriced findings are always kept — see [Cost honesty](https://github.com/achutharaman/sar-aws-barnacle/blob/main/docs/DECISIONS.md) |
 | Live pricing | `live_pricing` | `SAR_AWS_BARNACLE_LIVE_PRICING` | `--live-pricing` / `--no-live-pricing` | `true` | Query the AWS Pricing API (cached 30 days) vs. the bundled seed table only |
 | Max workers | `max_workers` | — | — | `8` | Parallel (check × region) units in the thread pool |
 | Checks to run | `checks_enabled` (array, top-level) | — | `--check` / `-c` | all registered checks | Restrict the scan to specific check ids |
@@ -257,7 +254,7 @@ Each check can expose its own options in a `[sar-aws-barnacle.checks.<check-id>]
 | `ebs-snapshot-age`, `rds-snapshot-age`, `iam-stale-keys` | `high_severity_days` | `365` | Findings at or beyond this age are `HIGH` instead of `MEDIUM` |
 | `vpc-endpoints-unused` | `high_severity_usd` | `20` | Findings at or above this monthly cost are `HIGH` instead of `MEDIUM`. Cost scales with the number of AZs an endpoint spans, so a multi-AZ endpoint crosses this more easily than a single-AZ one |
 
-`ec2-stopped`, `ebs-unencrypted`, `snapshot-orphaned`, `ami-orphaned-snapshots`, `nat-gw-idle`, and `kms-unused-keys` have no tunables — `ec2-stopped`'s `LOW`/`HIGH` split is a fixed 24-hour threshold (see [`docs/DECISIONS.md`](docs/DECISIONS.md) §3), `ebs-unencrypted`'s severity depends only on whether the volume is attached, `snapshot-orphaned` and `ami-orphaned-snapshots` are always `MEDIUM`, `nat-gw-idle` is always `HIGH`, and `kms-unused-keys` is always `LOW`.
+`ec2-stopped`, `ebs-unencrypted`, `snapshot-orphaned`, `ami-orphaned-snapshots`, `nat-gw-idle`, and `kms-unused-keys` have no tunables — `ec2-stopped`'s `LOW`/`HIGH` split is a fixed 24-hour threshold (see [`docs/DECISIONS.md`](https://github.com/achutharaman/sar-aws-barnacle/blob/main/docs/DECISIONS.md) §3), `ebs-unencrypted`'s severity depends only on whether the volume is attached, `snapshot-orphaned` and `ami-orphaned-snapshots` are always `MEDIUM`, `nat-gw-idle` is always `HIGH`, and `kms-unused-keys` is always `LOW`.
 
 ```toml
 [sar-aws-barnacle]
@@ -316,16 +313,16 @@ class IdleEc2Instances:
                 yield Finding(...)
 ```
 
-This one's illustrative only — the real `ec2-low-cpu` needs more than a CPU threshold to avoid false-positiving on memory- or IO-bound instances; see [`docs/DECISIONS.md`](docs/DECISIONS.md) §3 for why it's deferred rather than built yet.
+This one's illustrative only — the real `ec2-low-cpu` needs more than a CPU threshold to avoid false-positiving on memory- or IO-bound instances; see [`docs/DECISIONS.md`](https://github.com/achutharaman/sar-aws-barnacle/blob/main/docs/DECISIONS.md) §3 for why it's deferred rather than built yet.
 
 Then run `python scripts/generate_iam_policy.py` so the published policy covers the new permission.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). New checks are very welcome; the bar is a test that proves the detection logic and an honest cost confidence level. See [`docs/ROADMAP.md`](docs/ROADMAP.md) for what's shipped and what's next.
+See [CONTRIBUTING.md](https://github.com/achutharaman/sar-aws-barnacle/blob/main/CONTRIBUTING.md). New checks are very welcome; the bar is a test that proves the detection logic and an honest cost confidence level. See [`docs/ROADMAP.md`](https://github.com/achutharaman/sar-aws-barnacle/blob/main/docs/ROADMAP.md) for what's shipped and what's next.
 
-Found a security issue? See [SECURITY.md](SECURITY.md) — please don't open a public issue for it.
+Found a security issue? See [SECURITY.md](https://github.com/achutharaman/sar-aws-barnacle/blob/main/SECURITY.md) — please don't open a public issue for it.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](https://github.com/achutharaman/sar-aws-barnacle/blob/main/LICENSE).
