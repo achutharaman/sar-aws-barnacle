@@ -6,19 +6,23 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- README links to `docs/DECISIONS.md`, `docs/ROADMAP.md`, `CONTRIBUTING.md`,
+  `SECURITY.md`, and `LICENSE` were repo-relative, which breaks on PyPI's
+  project page (the long description renders standalone, outside repo
+  context) even though they worked fine on GitHub. Converted to absolute
+  `github.com` URLs. Removed a `docs/demo.gif` reference to a file that was
+  never actually added — a broken image beat no image.
+
+## [0.3.0] - 2026-08-17
+
 ### Added
-- Five new checks, completing the full v1 roadmap: `ebs-unencrypted`,
-  `eip-unassociated`, `ec2-stopped`, `ebs-snapshot-age`, `rds-snapshot-age`,
-  and `iam-stale-keys` (the first `Scope.GLOBAL` check). Several needed
-  real design deviations from the original roadmap wording, forced by AWS
-  API limitations rather than choice — see `docs/DECISIONS.md` §3 for the
-  reasoning behind each.
-- Two more checks pulled forward from `docs/CHECK-BACKLOG.md`:
+- Two checks pulled forward from `docs/CHECK-BACKLOG.md`:
   `vpc-endpoints-unused` (Interface VPC endpoints, a cost-awareness finding
   rather than a confirmed-idle one — see `docs/DECISIONS.md` §3) and
   `snapshot-orphaned` (EBS snapshots whose source volume no longer exists,
   with AMI-backed snapshots excluded entirely).
-- Three Tier-2 checks pulled forward from `docs/CHECK-BACKLOG.md`:
+- Three more Tier-2 checks pulled forward from `docs/CHECK-BACKLOG.md`:
   `ami-orphaned-snapshots` (snapshots left behind by a deregistered AMI,
   deduplicated against `snapshot-orphaned`), `nat-gw-idle` (NAT Gateways
   with no running EC2 instances in their VPC — a heuristic, worded as one,
@@ -27,6 +31,26 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   finding rather than an idleness claim). See `docs/DECISIONS.md` §3 for
   the reasoning behind each, including the verified KMS disabled-key
   billing behavior.
+- `docs/ROADMAP.md` — what's shipped and what's next, moved out of
+  `README.md` to keep the README focused on using the tool.
+
+### Fixed
+- Documentation audit against current code: `SECURITY.md` still claimed
+  no PyPI release existed, the README's IAM policy example showed 3 of the
+  17 actual actions, and the shipped-check count was wrong in three places
+  (a "six" that was actually seven, predating this release). README demo
+  section regenerated from real renderer output against a mocked account
+  instead of hand-typed text that had drifted from actual behavior.
+
+## [0.2.0] - 2026-08-15
+
+### Added
+- Five new checks, completing the full v1 roadmap: `ebs-unencrypted`,
+  `eip-unassociated`, `ec2-stopped`, `ebs-snapshot-age`, `rds-snapshot-age`,
+  and `iam-stale-keys` (the first `Scope.GLOBAL` check). Several needed
+  real design deviations from the original roadmap wording, forced by AWS
+  API limitations rather than choice — see `docs/DECISIONS.md` §3 for the
+  reasoning behind each.
 - Live progress bar during `scan` (stderr only; skipped automatically for
   piped or non-interactive output).
 - Per-region, per-check status breakdown in both the table and JSON
@@ -80,5 +104,7 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Generated least-privilege IAM policy (`sar-aws-barnacle iam-policy`), verified in CI.
 - AWS Pricing API integration with a 30-day disk cache and bundled seed fallback.
 
-[Unreleased]: https://github.com/achutharaman/sar-aws-barnacle/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/achutharaman/sar-aws-barnacle/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/achutharaman/sar-aws-barnacle/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/achutharaman/sar-aws-barnacle/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/achutharaman/sar-aws-barnacle/releases/tag/v0.1.0
