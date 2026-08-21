@@ -206,7 +206,59 @@ sar-aws-barnacle scan --profile sar-aws-barnacle-scanner --region ap-south-1
 
 `--profile` is actually optional here: if a profile named `sar-aws-barnacle-scanner` exists in your AWS config, `sar-aws-barnacle scan` uses it automatically when you don't pass `--profile` at all. This is a fallback, not a requirement — it only ever applies when that exact profile is present, so it changes nothing for default credentials, an instance role, or CI OIDC.
 
-If this was a one-off audit, clean up afterwards — `aws iam delete-access-key` and `aws iam delete-user` (after detaching the policy). Read-only access has nothing to steal, but an unused access key is still a credential not worth leaving around.
+If this was a one-off audit, clean up afterwards — see [Tear down](#tear-down) below. Read-only access has nothing to steal, but an unused access key is still a credential not worth leaving around.
+
+## Tear down
+
+Reverse order of creation. A user can't be deleted while it still holds an access key or an attached policy, so those have to go first. If you attached the policy to a role instead of a user, skip straight to step 4.
+
+**1. Delete the access key**
+
+```bash
+aws iam list-access-keys --user-name sar-aws-barnacle-scanner
+aws iam delete-access-key \
+  --user-name sar-aws-barnacle-scanner \
+  --access-key-id <ACCESS_KEY_ID>
+```
+
+**2. Detach the policy from the user**
+
+```bash
+aws iam detach-user-policy \
+  --user-name sar-aws-barnacle-scanner \
+  --policy-arn arn:aws:iam::<ACCOUNT_ID>:policy/sar-aws-barnacle-read-only-scan
+```
+
+**3. Delete the user**
+
+```bash
+aws iam delete-user --user-name sar-aws-barnacle-scanner
+```
+
+**4. Delete the policy**
+
+```bash
+aws iam delete-policy \
+  --policy-arn arn:aws:iam::<ACCOUNT_ID>:policy/sar-aws-barnacle-read-only-scan
+```
+
+Only once nothing else is attached to it — deleting a policy is permanent. `aws iam list-entities-for-policy --policy-arn <ARN>` shows every user, group, and role still attached before you do.
+
+**5. Forget the local profile**
+
+`aws configure` has no `unset` subcommand (only `list` / `get` / `set` / `list-profiles` / ...) — remove the profile by editing the files directly. The section header differs slightly between the two:
+
+```ini
+# ~/.aws/credentials
+[sar-aws-barnacle-scanner]
+...
+
+# ~/.aws/config
+[profile sar-aws-barnacle-scanner]
+...
+```
+
+Delete both blocks by hand. `~` is `$HOME` on Linux and macOS; on Windows it's `%UserProfile%`, so the same two files are `%UserProfile%\.aws\credentials` and `%UserProfile%\.aws\config`.
 
 ## Configuration
 

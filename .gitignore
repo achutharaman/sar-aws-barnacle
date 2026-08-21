@@ -24,6 +24,7 @@ htmlcov/
 
 # sar-aws-barnacle
 *.json
+!docs/iam-policy.json
 !src/sar_aws_barnacle/pricing/data/prices.seed.json
 *.docx
 *.txt
